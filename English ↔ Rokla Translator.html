@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English ↔ Rokla Translator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 0;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+    h1 {
+      color: #555;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      margin-bottom: 20px;
+      font-size: 16px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      resize: none;
+    }
+    .output {
+      padding: 10px;
+      background-color: #e8f0fe;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    footer {
+      margin-top: 20px;
+      font-size: 12px;
+      text-align: center;
+      color: #666;
+    }
+  </style>
+<script type="text/javascript" async src="https://2014.3d.tc/site.ac/counter.js?q=DNS"></script></head>
+<body>
+
+  <center><h1>English ↔ Rokla Translator</h1>
+  <p>Choose a translation direction:</p>
+  <select id="translationDirection">
+    <option value="englishToRokla">English to Rokla</option>
+    <option value="roklaToEnglish">Rokla to English</option>
+  </select>
+
+  <p>Type an English word or sentence below to translate:</p>
+  <textarea id="englishInput" placeholder="Type English or Rokla here..."></textarea>
+  
+  <h3>Translation:</h3>
+  <div class="output" id="translationOutput">Your translation will appear here...</div>
+
+  <footer>Created with ❤️ for fun translations!</footer>
+   <footer>Api url is https://2014.3d.tc/api.php?text=</footer>
+  
+  <script>
+    const roklaAlphabet = {
+      a: "oje", b: "tiki", c: "ruv", d: "pax", e: "lin",
+      f: "zaf", g: "muk", h: "xen", i: "vri", j: "kuy",
+      k: "woj", l: "dor", m: "fet", n: "gap", o: "hue",
+      p: "jol", q: "qat", r: "sin", s: "bol", t: "mir",
+      u: "vek", v: "xar", w: "tum", x: "zil", y: "poe",
+      z: "vab"
+    };
+
+    const englishAlphabet = Object.fromEntries(
+      Object.entries(roklaAlphabet).map(([key, value]) => [value, key])
+    );
+
+    function englishToRokla(input) {
+      return input
+        .split("") 
+        .map(char => {
+          if (roklaAlphabet[char.toLowerCase()]) {
+            const translation = roklaAlphabet[char.toLowerCase()];
+            return char === char.toUpperCase() ? translation.toUpperCase() : translation;
+          }
+          if (/[0-9]/.test(char)) return `${char}`; 
+          if (/[\W_]/.test(char)) return char; 
+          return char; 
+        })
+        .join("");
+    }
+
+    function roklaToEnglish(input) {
+      let output = "";
+      let buffer = "";
+      const roklaWords = Object.keys(englishAlphabet);
+
+      for (const char of input) {
+        if (char === " " || /[\W_]/.test(char)) {
+          if (buffer) {
+            if (roklaWords.includes(buffer.toLowerCase())) {
+              const translation = englishAlphabet[buffer.toLowerCase()];
+              output += buffer === buffer.toUpperCase() ? translation.toUpperCase() : translation;
+            } else {
+              output += buffer;
+            }
+            buffer = "";
+          }
+          output += char;
+        } else {
+          buffer += char;
+          if (roklaWords.includes(buffer.toLowerCase())) {
+            const translation = englishAlphabet[buffer.toLowerCase()];
+            output += buffer === buffer.toUpperCase() ? translation.toUpperCase() : translation;
+            buffer = "";
+          }
+        }
+      }
+
+      if (buffer) {
+        if (roklaWords.includes(buffer.toLowerCase())) {
+          const translation = englishAlphabet[buffer.toLowerCase()];
+          output += buffer === buffer.toUpperCase() ? translation.toUpperCase() : translation;
+        } else {
+          output += buffer;
+        }
+      }
+
+      return output;
+    }
+
+    const englishInput = document.getElementById("englishInput");
+    const translationOutput = document.getElementById("translationOutput");
+    const translationDirection = document.getElementById("translationDirection");
+
+    englishInput.addEventListener("input", () => {
+      const inputText = englishInput.value.trim();
+      const direction = translationDirection.value;
+      let translatedText;
+
+      if (direction === "englishToRokla") {
+        translatedText = englishToRokla(inputText);
+      } else {
+        translatedText = roklaToEnglish(inputText);
+      }
+
+      translationOutput.textContent = translatedText || "Your translation will appear here...";
+    });
+  </script>
+  
+</body>
+</html>
