@@ -84,7 +84,7 @@ button { padding:12px; border-radius:12px; border:none; background:#007aff; colo
   </div>
 </div>
 
-<!-- WINDOWS (same as before) -->
+<!-- WINDOWS -->
 <div id="notes" class="window">
   <div class="header"><div class="back" onclick="goHome()">‹ Home</div><div class="title">Notes</div></div>
   <textarea id="notesText" style="flex:1;"></textarea>
@@ -178,6 +178,7 @@ function createAppEl(app) {
   if (app.isCustom) el.classList.add("is-custom");
   el.draggable = true;
   el.dataset.id = app.id || app.url || app.name;
+  el.dataset.pinned = !app.isCustom;   // ← NEW: true = built-in, cannot leave dock
   el.innerHTML = `<img src="${app.icon}"><span>${app.name}</span>`;
 
   if (app.isCustom) {
@@ -235,7 +236,7 @@ function exitEditMode() {
   document.getElementById("done").style.display = "none";
 }
 
-// ─── DRAG & DROP (with dock limit fix) ──────────────────────
+// ─── DRAG & DROP (with pinned protection) ───────────────────
 function getAfterElement(container, pos, horizontal) {
   const items = Array.from(container.children).filter(c => !c.classList.contains("dragging"));
   return items.reduce((closest, child) => {
@@ -245,26 +246,34 @@ function getAfterElement(container, pos, horizontal) {
   }, {offset: Number.NEGATIVE_INFINITY}).element;
 }
 
-// Home dragover (no limit)
+// Home → block pinned (built-in) apps from entering
 home.addEventListener("dragover", e => {
   e.preventDefault();
   const dragging = document.querySelector(".dragging");
-  if (!dragging) return;
+  if (!dragging || dragging.dataset.pinned === "true") return;   // ← built-ins cannot go to home
   const after = getAfterElement(home, e.clientY, false);
   home.insertBefore(dragging, after || null);
 });
 
-// Dock dragover + auto-kick when full
+// Dock → allow everything, but kick only custom apps when full
 dock.addEventListener("dragover", e => {
   e.preventDefault();
   const dragging = document.querySelector(".dragging");
   if (!dragging) return;
 
   const maxDock = deviceMode === 'ipad' ? 6 : 4;
+
   if (dock.children.length >= maxDock && !dock.contains(dragging)) {
-    // Push the rightmost dock app to home
-    const last = dock.lastElementChild;
-    if (last) home.appendChild(last);
+    // Find rightmost custom app to kick (never kick built-ins)
+    let lastCustom = null;
+    for (let i = dock.children.length - 1; i >= 0; i--) {
+      if (dock.children[i].dataset.pinned !== "true") {
+        lastCustom = dock.children[i];
+        break;
+      }
+    }
+    if (lastCustom) home.appendChild(lastCustom);
+    else return; // dock is full of only built-ins → block new app
   }
 
   const after = getAfterElement(dock, e.clientX, true);
@@ -289,9 +298,7 @@ function syncOrder() {
 function openApp(id) { document.querySelectorAll(".window").forEach(w=>w.style.display="none"); document.getElementById(id).style.display="flex"; }
 function goHome() { document.querySelectorAll(".window").forEach(w=>w.style.display="none"); }
 
-// Notes, Calculator, Browser, Custom apps, Wallpaper → exactly the same as last version
-// (I kept them short here for space, but they are identical to the previous full code)
-
+// Notes
 const notesText = document.getElementById("notesText");
 notesText.value = localStorage.notes || "";
 notesText.oninput = e => localStorage.notes = e.target.value;
