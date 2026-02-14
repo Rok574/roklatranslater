@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>iOS Web Home</title>
+<title>iOS / iPadOS Home</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
 <style>
@@ -10,39 +10,54 @@
 body { margin:0; font-family:'SF Pro Display',-apple-system,sans-serif; background:black; overflow:hidden; }
 #wallpaper { position:fixed; inset:0; background:#000 center/cover no-repeat; z-index:0; }
 
-/* Home & Dock */
-#home { position:relative; padding:30px 20px 140px; display:grid; grid-template-columns:repeat(4,1fr); gap:22px; z-index:1; }
-#dock {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(420px, calc(100% - 40px));   /* keeps it from stretching too wide */
-  padding: 14px 20px;
-  background: rgba(255,255,255,.25);
-  backdrop-filter: blur(20px);
-  border-radius: 28px;
-  display: flex;                    /* changed from grid */
-  gap: 24px;
-  justify-content: center;          /* this is what centers the icons nicely */
-  z-index: 2;
+/* ── iPhone layout ───────────────────────────────────── */
+body.iphone #home {
+  padding:30px 20px 140px;
+  grid-template-columns: repeat(4, 1fr);
+  gap:22px;
 }
-  
-/* App icon */
+body.iphone #dock {
+  width:min(420px, calc(100% - 40px));
+  padding:14px 20px;
+  gap:24px;
+}
+body.iphone .app img { width:64px; height:64px; border-radius:14px; }
+body.iphone .app span { font-size:12px; margin-top:6px; }
+
+/* ── iPad layout ─────────────────────────────────────── */
+body.ipad #home {
+  padding:40px 30px 160px;
+  grid-template-columns: repeat(6, 1fr);
+  gap:28px;
+}
+body.ipad #dock {
+  width:min(620px, calc(100% - 48px));
+  padding:18px 28px;
+  gap:32px;
+}
+body.ipad .app img { width:72px; height:72px; border-radius:18px; }
+body.ipad .app span { font-size:13px; margin-top:8px; }
+
+/* Shared styles */
+#home { position:relative; display:grid; z-index:1; }
+#dock {
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  background:rgba(255,255,255,.25); backdrop-filter:blur(20px);
+  border-radius:28px; display:flex; justify-content:center; z-index:2;
+}
 .app { text-align:center; color:white; cursor:pointer; position:relative; transition:transform .15s; }
 .app:active { transform:scale(0.92); }
 .app.dragging { opacity:0.6; transform:scale(1.12); z-index:10; }
-.app img { width:64px; height:64px; border-radius:14px; }
-.app span { display:block; margin-top:6px; font-size:12px; }
-
-/* Edit mode */
+.delete-x {
+  position:absolute; top:-8px; right:-8px; width:24px; height:24px;
+  background:#ff3b30; color:white; border-radius:50%; font-size:19px; font-weight:bold;
+  display:none; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.5);
+}
+body.edit-mode .app.is-custom .delete-x { display:flex; }
 body.edit-mode .app { animation:wiggle 0.8s infinite; }
 @keyframes wiggle { 0%,100%{transform:rotate(-3deg);} 25%{transform:rotate(3deg);} 50%{transform:rotate(-2deg);} 75%{transform:rotate(2deg);} }
-.delete-x { position:absolute; top:-6px; right:-6px; width:22px; height:22px; background:#ff3b30; color:white; border-radius:50%; font-size:18px; font-weight:bold; display:none; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,0.5); }
-body.edit-mode .app.is-custom .delete-x { display:flex; }
 
-/* Done button */
-#done { position:fixed; top:20px; right:20px; background:rgba(0,122,255,0.85); color:white; padding:6px 18px; border-radius:30px; font-size:17px; font-weight:600; display:none; z-index:30; cursor:pointer; }
+#done { position:fixed; top:24px; right:24px; background:rgba(0,122,255,0.85); color:white; padding:7px 20px; border-radius:30px; font-size:17px; font-weight:600; display:none; z-index:30; cursor:pointer; }
 
 /* Windows */
 .window { position:fixed; inset:0; background:#000; color:white; display:none; flex-direction:column; z-index:10; }
@@ -51,17 +66,23 @@ body.edit-mode .app.is-custom .delete-x { display:flex; }
 .title { margin-left:10px; font-weight:600; }
 input, textarea { width:100%; background:#111; color:white; border:none; border-radius:10px; padding:10px; font-size:16px; }
 button { padding:12px; border-radius:12px; border:none; background:#007aff; color:white; font-size:16px; margin-top:8px; }
-
-/* Calculator */
 .calc-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:10px; }
 .calc-grid button { font-size:22px; border-radius:50%; padding:20px; }
 .gray { background:#a5a5a5; color:black; }
 .dark { background:#333; color:white; }
 .orange { background:#ff9f0a; color:white; }
 .wide { grid-column:span 2; border-radius:40px; }
-
-/* Browser favorites */
 .favorite { padding:12px; border-bottom:1px solid #222; word-break:break-all; cursor:pointer; }
+
+/* Device chooser */
+#deviceChooser {
+  position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:999;
+  display:none; flex-direction:column; align-items:center; justify-content:center; color:white; gap:40px;
+}
+#deviceChooser h1 { font-size:28px; font-weight:600; }
+#deviceChooser button {
+  background:#007aff; color:white; border:none; border-radius:14px; padding:16px 40px; font-size:18px; cursor:pointer;
+}
 </style>
 </head>
 <body>
@@ -70,7 +91,16 @@ button { padding:12px; border-radius:12px; border:none; background:#007aff; colo
 <div id="dock"></div>
 <div id="done" onclick="exitEditMode()">Done</div>
 
-<!-- WINDOWS (same as your old code) -->
+<!-- DEVICE CHOOSER -->
+<div id="deviceChooser">
+  <h1>Choose your device</h1>
+  <div style="display:flex;gap:30px;">
+    <button onclick="setDevice('iphone')">iPhone</button>
+    <button onclick="setDevice('ipad')">iPad</button>
+  </div>
+</div>
+
+<!-- WINDOWS -->
 <div id="notes" class="window">
   <div class="header"><div class="back" onclick="goHome()">‹ Home</div><div class="title">Notes</div></div>
   <textarea id="notesText" style="flex:1;"></textarea>
@@ -105,7 +135,7 @@ button { padding:12px; border-radius:12px; border:none; background:#007aff; colo
 <div id="browser" class="window">
   <div class="header"><div class="back" onclick="goHome()">‹ Home</div><div class="title">Browser</div></div>
   <div style="padding:15px;">
-    <input id="browserUrl" placeholder="Enter URL (example.com)">
+    <input id="browserUrl" placeholder="Enter URL">
     <button onclick="openBrowserUrl()">Go</button>
     <h3>Favorites</h3>
     <input id="favUrl" placeholder="Add favorite URL">
@@ -129,7 +159,28 @@ button { padding:12px; border-radius:12px; border:none; background:#007aff; colo
 </div>
 
 <script>
-// ─── APPS (now saved) ─────────────────────────────────────
+// ─── DEVICE MODE ─────────────────────────────────────────────
+let deviceMode = localStorage.getItem('deviceMode');
+
+if (!deviceMode) {
+  document.getElementById('deviceChooser').style.display = 'flex';
+}
+
+function setDevice(mode) {
+  localStorage.setItem('deviceMode', mode);
+  deviceMode = mode;
+  document.getElementById('deviceChooser').style.display = 'none';
+  applyLayout();
+  renderApps();
+}
+
+// ─── LAYOUT ──────────────────────────────────────────────────
+function applyLayout() {
+  document.body.classList.remove('iphone', 'ipad');
+  document.body.classList.add(deviceMode === 'ipad' ? 'ipad' : 'iphone');
+}
+
+// ─── APPS ────────────────────────────────────────────────────
 let apps = JSON.parse(localStorage.getItem("apps")) || [
   { name: "Notes", id: "notes", icon: "https://img.icons8.com/ios-filled/100/ffffff/notes.png", isCustom: false },
   { name: "Calc", id: "calculator", icon: "https://img.icons8.com/ios-filled/100/ffffff/calculator.png", isCustom: false },
@@ -139,11 +190,9 @@ let apps = JSON.parse(localStorage.getItem("apps")) || [
 let editMode = false;
 let pressTimer;
 
-// ─── ELEMENTS ─────────────────────────────────────────────
 const home = document.getElementById("home");
 const dock = document.getElementById("dock");
 
-// ─── CREATE APP ───────────────────────────────────────────
 function createAppEl(app) {
   const el = document.createElement("div");
   el.className = "app";
@@ -156,26 +205,17 @@ function createAppEl(app) {
     const x = document.createElement("div");
     x.className = "delete-x";
     x.textContent = "×";
-    x.onclick = e => {
-      e.stopImmediatePropagation();
-      if (confirm(`Delete "${app.name}"?`)) {
-        apps = apps.filter(a => a !== app);
-        localStorage.setItem("apps", JSON.stringify(apps));
-        render();
-      }
-    };
+    x.onclick = e => { e.stopImmediatePropagation(); if(confirm(`Delete "${app.name}"?`)) { apps = apps.filter(a=>a!==app); localStorage.setItem("apps",JSON.stringify(apps)); renderApps(); } };
     el.appendChild(x);
   }
 
-  // click
   el.onclick = () => {
     if (editMode) return;
     if (app.id) openApp(app.id);
     else if (app.url) window.open(app.url, "_blank");
   };
 
-  // long press → edit mode
-  const start = () => pressTimer = setTimeout(enterEditMode, 500);
+  const start = () => pressTimer = setTimeout(() => { enterEditMode(); }, 500);
   const cancel = () => clearTimeout(pressTimer);
   el.addEventListener("mousedown", start);
   el.addEventListener("mouseup", cancel);
@@ -184,30 +224,27 @@ function createAppEl(app) {
   el.addEventListener("touchend", cancel);
   el.addEventListener("touchcancel", cancel);
 
-  // drag (only in edit mode)
   el.addEventListener("dragstart", e => {
     if (!editMode) { e.preventDefault(); return; }
     e.dataTransfer.setData("text/plain", el.dataset.id);
     el.classList.add("dragging");
   });
-  el.addEventListener("dragend", () => {
-    el.classList.remove("dragging");
-    syncOrder();
-  });
+  el.addEventListener("dragend", () => { el.classList.remove("dragging"); syncOrder(); });
 
   return el;
 }
 
-function render() {
+function renderApps() {
   home.innerHTML = "";
   dock.innerHTML = "";
+  const dockCount = deviceMode === 'ipad' ? 6 : 4;
   apps.forEach((app, i) => {
     const el = createAppEl(app);
-    (i < 4 ? dock : home).appendChild(el);
+    (i < dockCount ? dock : home).appendChild(el);
   });
 }
 
-// ─── EDIT MODE ─────────────────────────────────────────────
+// ─── EDIT / DRAG ─────────────────────────────────────────────
 function enterEditMode() {
   editMode = true;
   document.body.classList.add("edit-mode");
@@ -219,23 +256,21 @@ function exitEditMode() {
   document.getElementById("done").style.display = "none";
 }
 
-// ─── DRAG & DROP (live + save) ─────────────────────────────
 function getAfterElement(container, pos, horizontal) {
   const items = Array.from(container.children).filter(c => !c.classList.contains("dragging"));
   return items.reduce((closest, child) => {
     const box = child.getBoundingClientRect();
     const offset = horizontal ? pos - box.left - box.width/2 : pos - box.top - box.height/2;
-    if (offset < 0 && offset > closest.offset) return {offset, element: child};
-    return closest;
+    return (offset < 0 && offset > closest.offset) ? {offset, element: child} : closest;
   }, {offset: Number.NEGATIVE_INFINITY}).element;
 }
 
-[home, dock].forEach((container, isHorizontal) => {
+[home, dock].forEach((container, isHoriz) => {
   container.addEventListener("dragover", e => {
     e.preventDefault();
     const dragging = document.querySelector(".dragging");
     if (!dragging) return;
-    const after = getAfterElement(container, isHorizontal ? e.clientX : e.clientY, isHorizontal);
+    const after = getAfterElement(container, isHoriz ? e.clientX : e.clientY, isHoriz);
     container.insertBefore(dragging, after || null);
   });
 });
@@ -254,21 +289,15 @@ function syncOrder() {
   localStorage.setItem("apps", JSON.stringify(apps));
 }
 
-// ─── WINDOWS ───────────────────────────────────────────────
-function openApp(id) {
-  document.querySelectorAll(".window").forEach(w => w.style.display = "none");
-  document.getElementById(id).style.display = "flex";
-}
-function goHome() {
-  document.querySelectorAll(".window").forEach(w => w.style.display = "none");
-}
+// ─── WINDOWS & FEATURES (unchanged from your working code) ──
+function openApp(id) { document.querySelectorAll(".window").forEach(w=>w.style.display="none"); document.getElementById(id).style.display="flex"; }
+function goHome() { document.querySelectorAll(".window").forEach(w=>w.style.display="none"); }
 
-// ─── NOTES, CALC, BROWSER, WALLPAPER (your original working code) ──
-const notesText = document.getElementById("notesText");
-notesText.value = localStorage.notes || "";
-notesText.oninput = () => localStorage.notes = notesText.value;
+// Notes
+document.getElementById("notesText").value = localStorage.notes || "";
+document.getElementById("notesText").oninput = e => localStorage.notes = e.target.value;
 
-// Calculator (unchanged from your old code)
+// Calculator
 let current = "0", operator = null, stored = null;
 const disp = document.getElementById("calcDisplay");
 function update(){ disp.textContent = current; }
@@ -287,7 +316,7 @@ function equals(){
   update();
 }
 
-// Browser – now opens in NEW TAB
+// Browser
 let favorites = JSON.parse(localStorage.favorites || "[]");
 function renderFavorites() {
   const list = document.getElementById("favorites");
@@ -320,22 +349,20 @@ function addCustomWebApp() {
   const urlInput = document.getElementById("webappUrl").value.trim();
   const file = document.getElementById("webappIcon").files[0];
   if (!name || !urlInput) return alert("Name and URL required");
-
   const url = urlInput.startsWith("http") ? urlInput : "https://" + urlInput;
-
   if (file) {
     const reader = new FileReader();
     reader.onload = e => {
       apps.push({name, url, icon: e.target.result, isCustom: true});
       localStorage.setItem("apps", JSON.stringify(apps));
-      render();
+      renderApps();
       clearCustomInputs();
     };
     reader.readAsDataURL(file);
   } else {
     apps.push({name, url, icon: "https://img.icons8.com/ios-filled/100/ffffff/globe.png", isCustom: true});
     localStorage.setItem("apps", JSON.stringify(apps));
-    render();
+    renderApps();
     clearCustomInputs();
   }
 }
@@ -345,7 +372,7 @@ function clearCustomInputs() {
   document.getElementById("webappIcon").value = "";
 }
 
-// Wallpaper (your original)
+// Wallpaper
 function setWallpaper(input) {
   const r = new FileReader();
   r.onload = () => {
@@ -356,8 +383,9 @@ function setWallpaper(input) {
 }
 if (localStorage.wp) document.getElementById("wallpaper").style.backgroundImage = `url(${localStorage.wp})`;
 
-// ─── START ─────────────────────────────────────────────────
-render();
+// ─── START ───────────────────────────────────────────────────
+applyLayout();
+renderApps();
 </script>
 </body>
 </html>
