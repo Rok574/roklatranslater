@@ -178,7 +178,7 @@ function createAppEl(app) {
   el.draggable = true;
   el.dataset.id = app.id || app.url || app.name;
   el.dataset.pinned = !app.isCustom;   // ← NEW: true = built-in, cannot leave dock
-  el.innerHTML = `<img src="${app.icon}"><span>${app.name}</span>`;
+  el.innerHTML = `<img src="${app.icon}"><center><span>${app.name}</span></center>`;
 
   if (app.isCustom) {
     const x = document.createElement("div");
