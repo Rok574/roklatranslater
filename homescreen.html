@@ -2,88 +2,48 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>iOS / iPadOS Home</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>iOS Home</title>
 <link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
 <style>
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body { margin:0; font-family:'SF Pro Display',-apple-system,sans-serif; background:black; overflow:hidden; }
-#wallpaper { position:fixed; inset:0; background:#000 center/cover no-repeat; z-index:0; }
-
-/* iPhone layout */
-body.iphone .app img { width:64px; height:64px; border-radius:14px; }
-body.iphone .app span { font-size:12px; margin-top:6px; }
-
-/* iPad layout */
-body.ipad .app img { width:72px; height:72px; border-radius:18px; }
-body.ipad .app span { font-size:13px; margin-top:8px; }
-
-/* Shared */
-#home {
-  position:relative; z-index:1;
-  height: calc(100vh - 220px);
-  display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scroll-behavior:smooth;
-  -webkit-overflow-scrolling:touch;
-}
-.page {
-  flex:0 0 100%; height:100%; padding:20px; scroll-snap-align:start;
-  display:grid; grid-template-columns:repeat(var(--cols),1fr); gap:var(--gap);
-  align-content:start; overflow-y:auto;
-}
-#dock {
-  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
-  background:rgba(255,255,255,.25); backdrop-filter:blur(20px);
-  border-radius:28px; display:flex; justify-content:center; z-index:2;
-}
-body.iphone #dock { width:min(420px, calc(100% - 40px)); padding:14px 20px; gap:24px; }
-body.ipad #dock { width:min(620px, calc(100% - 48px)); padding:18px 28px; gap:32px; }
-
-.app { text-align:center; color:white; cursor:pointer; position:relative; transition:transform .15s; }
-.app:active { transform:scale(0.92); }
-.app.dragging { opacity:0.6; transform:scale(1.12); z-index:10; }
-.delete-x {
-  position:absolute; top:-8px; right:-8px; width:24px; height:24px;
-  background:#ff3b30; color:white; border-radius:50%; font-size:19px; font-weight:bold;
-  display:none; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.5);
-}
-body.edit-mode .app.is-custom .delete-x { display:flex; }
-body.edit-mode .app { animation:wiggle 0.8s infinite; }
-@keyframes wiggle { 0%,100%{transform:rotate(-3deg);} 25%{transform:rotate(3deg);} 50%{transform:rotate(-2deg);} 75%{transform:rotate(2deg);} }
-
-#done { position:fixed; top:24px; right:24px; background:rgba(0,122,255,0.85); color:white; padding:7px 20px; border-radius:30px; font-size:17px; font-weight:600; display:none; z-index:30; cursor:pointer; }
-
-#pageDots {
-  position:fixed; bottom:155px; left:50%; transform:translateX(-50%);
-  display:flex; gap:6px; z-index:5;
-}
-.dot {
-  width:8px; height:8px; background:rgba(255,255,255,0.5); border-radius:50%; transition:all .2s;
-}
-.dot.active { background:white; transform:scale(1.3); }
-
-/* Windows */
-.window { position:fixed; inset:0; background:#000; color:white; display:none; flex-direction:column; z-index:10; }
-.header { height:50px; display:flex; align-items:center; padding:0 14px; background:#111; border-bottom:1px solid #222; }
-.back { font-size:18px; cursor:pointer; }
-.title { margin-left:10px; font-weight:600; }
-input, textarea { width:100%; background:#111; color:white; border:none; border-radius:10px; padding:10px; font-size:16px; }
-button { padding:12px; border-radius:12px; border:none; background:#007aff; color:white; font-size:16px; margin-top:8px; }
-.calc-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:10px; }
-.calc-grid button { font-size:22px; border-radius:50%; padding:20px; }
-.gray { background:#a5a5a5; color:black; }
-.dark { background:#333; color:white; }
-.orange { background:#ff9f0a; color:white; }
-.wide { grid-column:span 2; border-radius:40px; }
-.favorite { padding:12px; border-bottom:1px solid #222; word-break:break-all; cursor:pointer; }
-
-#deviceChooser {
-  position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:999;
-  display:none; flex-direction:column; align-items:center; justify-content:center; color:white; gap:40px;
-}
-#deviceChooser h1 { font-size:28px; font-weight:600; }
-#deviceChooser button {
-  background:#007aff; color:white; border:none; border-radius:14px; padding:16px 40px; font-size:18px; cursor:pointer;
-}
+body{margin:0;font-family:'SF Pro Display',-apple-system,sans-serif;background:#000;color:#fff;overflow:hidden}
+#wallpaper{position:fixed;inset:0;background:#000 center/cover no-repeat;z-index:0}
+#home{position:relative;z-index:1;height:calc(100vh-220px);display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+.page{flex:0 0 100%;height:100%;padding:20px;display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:var(--gap);align-content:start;overflow-y:auto;scroll-snap-align:start}
+#dock{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.25);backdrop-filter:blur(20px);border-radius:28px;display:flex;justify-content:center;z-index:2}
+body.iphone #dock{width:min(420px,calc(100%-40px));padding:14px 20px;gap:24px}
+body.ipad #dock{width:min(620px,calc(100%-48px));padding:18px 28px;gap:32px}
+.app{text-align:center;color:white;cursor:pointer;position:relative;transition:transform .15s}
+.app img{width:64px;height:64px;border-radius:14px}
+body.ipad .app img{width:72px;height:72px;border-radius:18px}
+body.iphone .app span{font-size:12px;margin-top:6px}
+body.ipad .app span{font-size:13px;margin-top:8px}
+.app:active{transform:scale(0.92)}
+.app.dragging{opacity:0.6;transform:scale(1.12);z-index:10}
+.delete-x{position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:#ff3b30;color:white;border-radius:50%;font-size:19px;font-weight:bold;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.5)}
+body.edit-mode .app.is-custom .delete-x{display:flex}
+body.edit-mode .app{animation:wiggle 0.8s infinite}
+@keyframes wiggle{0%,100%{transform:rotate(-3deg);}25%{transform:rotate(3deg);}50%{transform:rotate(-2deg);}75%{transform:rotate(2deg);}}
+#done{position:fixed;top:24px;right:24px;background:rgba(0,122,255,0.85);color:white;padding:7px 20px;border-radius:30px;font-size:17px;font-weight:600;display:none;z-index:30;cursor:pointer}
+#pageDots{position:fixed;bottom:155px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:5}
+.dot{width:8px;height:8px;background:rgba(255,255,255,0.5);border-radius:50%;transition:all .2s}
+.dot.active{background:white;transform:scale(1.3)}
+.window{position:fixed;inset:0;background:#000;color:white;display:none;flex-direction:column;z-index:10}
+.header{height:50px;display:flex;align-items:center;padding:0 14px;background:#111;border-bottom:1px solid #222}
+.back{font-size:18px;cursor:pointer}
+.title{margin-left:10px;font-weight:600}
+input,textarea{width:100%;background:#111;color:white;border:none;border-radius:10px;padding:10px;font-size:16px}
+button{padding:12px;border-radius:12px;border:none;background:#007aff;color:white;font-size:16px;margin-top:8px}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:10px}
+.calc-grid button{font-size:22px;border-radius:50%;padding:20px}
+.gray{background:#a5a5a5;color:black}
+.dark{background:#333;color:white}
+.orange{background:#ff9f0a;color:white}
+.wide{grid-column:span 2;border-radius:40px}
+.favorite{padding:12px;border-bottom:1px solid #222;word-break:break-all;cursor:pointer}
+#deviceChooser{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;gap:40px}
+#deviceChooser h1{font-size:28px;font-weight:600}
+#deviceChooser button{background:#007aff;color:white;border:none;border-radius:14px;padding:16px 40px;font-size:18px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -95,344 +55,256 @@ button { padding:12px; border-radius:12px; border:none; background:#007aff; colo
 
 <!-- DEVICE CHOOSER -->
 <div id="deviceChooser">
-  <h1>Choose your device</h1>
-  <div style="display:flex;gap:30px;">
-    <button onclick="setDevice('iphone')">iPhone</button>
-    <button onclick="setDevice('ipad')">iPad</button>
-  </div>
+<h1>Choose your device</h1>
+<div style="display:flex;gap:30px">
+<button onclick="setDevice('iphone')">iPhone</button>
+<button onclick="setDevice('ipad')">iPad</button>
+</div>
 </div>
 
-<!-- WINDOWS (Notes, Calculator, Browser, Settings) -->
+<!-- WINDOWS -->
 <div id="notes" class="window">
-  <div class="header"><div class="back" onclick="goHome()">‹ Home</div><div class="title">Notes</div></div>
-  <textarea id="notesText" style="flex:1;"></textarea>
+<div class="header"><div class="back" onclick="goHome()">‹ Home</div><div class="title">Notes</div></div>
+<textarea id="notesText" style="flex:1;"></textarea>
 </div>
 
 <div id="calculator" class="window">
-  <div class="header"><div class="back" onclick="goHome()">‹ Home</div><div class="title">Calculator</div></div>
-  <div id="calcDisplay" style="font-size:48px;text-align:right;padding:20px;">0</div>
-  <div class="calc-grid">
-    <button class="gray" onclick="clearCalc()">AC</button>
-    <button class="gray" onclick="toggleSign()">±</button>
-    <button class="gray" onclick="percent()">%</button>
-    <button class="orange" onclick="setOp('/')">÷</button>
-    <button class="dark" onclick="num(7)">7</button>
-    <button class="dark" onclick="num(8)">8</button>
-    <button class="dark" onclick="num(9)">9</button>
-    <button class="orange" onclick="setOp('*')">×</button>
-    <button class="dark" onclick="num(4)">4</button>
-    <button class="dark" onclick="num(5)">5</button>
-    <button class="dark" onclick="num(6)">6</button>
-    <button class="orange" onclick="setOp('-')">−</button>
-    <button class="dark" onclick="num(1)">1</button>
-    <button class="dark" onclick="num(2)">2</button>
-    <button class="dark" onclick="num(3)">3</button>
-    <button class="orange" onclick="setOp('+')">+</button>
-    <button class="dark wide" onclick="num(0)">0</button>
-    <button class="dark" onclick="dot()">.</button>
-    <button class="orange" onclick="equals()">=</button>
-  </div>
+<div class="header"><div class="back" onclick="goHome()">‹ Home</div><div class="title">Calculator</div></div>
+<div id="calcDisplay" style="font-size:48px;text-align:right;padding:20px;">0</div>
+<div class="calc-grid">
+<button class="gray" onclick="clearCalc()">AC</button>
+<button class="gray" onclick="toggleSign()">±</button>
+<button class="gray" onclick="percent()">%</button>
+<button class="orange" onclick="setOp('/')">÷</button>
+<button class="dark" onclick="num(7)">7</button>
+<button class="dark" onclick="num(8)">8</button>
+<button class="dark" onclick="num(9)">9</button>
+<button class="orange" onclick="setOp('*')">×</button>
+<button class="dark" onclick="num(4)">4</button>
+<button class="dark" onclick="num(5)">5</button>
+<button class="dark" onclick="num(6)">6</button>
+<button class="orange" onclick="setOp('-')">−</button>
+<button class="dark" onclick="num(1)">1</button>
+<button class="dark" onclick="num(2)">2</button>
+<button class="dark" onclick="num(3)">3</button>
+<button class="orange" onclick="setOp('+')">+</button>
+<button class="dark wide" onclick="num(0)">0</button>
+<button class="dark" onclick="dot()">.</button>
+<button class="orange" onclick="equals()">=</button>
+</div>
 </div>
 
 <div id="browser" class="window">
-  <div class="header"><div class="back" onclick="goHome()">‹ Home</div><div class="title">Browser</div></div>
-  <div style="padding:15px;">
-    <input id="browserUrl" placeholder="Enter URL">
-    <button onclick="openBrowserUrl()">Go</button>
-    <h3>Favorites</h3>
-    <input id="favUrl" placeholder="Add favorite URL">
-    <button onclick="addFavorite()">Add Favorite</button>
-    <div id="favorites"></div>
-  </div>
+<div class="header"><div class="back" onclick="goHome()">‹ Home</div><div class="title">Browser</div></div>
+<div style="padding:15px">
+<input id="browserUrl" placeholder="Enter URL">
+<button onclick="openBrowserUrl()">Go</button>
+<h3>Favorites</h3>
+<input id="favUrl" placeholder="Add favorite URL">
+<button onclick="addFavorite()">Add Favorite</button>
+<div id="favorites"></div>
+</div>
 </div>
 
 <div id="settings" class="window">
-  <div class="header"><div class="back" onclick="goHome()">‹ Home</div><div class="title">Settings</div></div>
-  <div style="padding:15px;">
-    <h3>Wallpaper</h3>
-    <input type="file" accept="image/*" onchange="setWallpaper(this)">
-    <h3 style="margin-top:30px;">Add Web App</h3>
-    <input id="webappName" placeholder="App Name" style="margin-bottom:8px;">
-    <input id="webappUrl" placeholder="https://youtube.com" style="margin-bottom:8px;">
-    <input id="webappIcon" type="file" accept="image/*" style="margin-bottom:8px;">
-    <button onclick="addCustomWebApp()">Add to Home Screen</button>
-  </div>
+<div class="header"><div class="back" onclick="goHome()">‹ Home</div><div class="title">Settings</div></div>
+<div style="padding:15px">
+<h3>Wallpaper</h3>
+<input type="file" accept="image/*" onchange="setWallpaper(this)">
+<h3 style="margin-top:30px">Add Web App</h3>
+<input id="webappName" placeholder="App Name" style="margin-bottom:8px">
+<input id="webappUrl" placeholder="https://youtube.com" style="margin-bottom:8px">
+<input id="webappIcon" type="file" accept="image/*" style="margin-bottom:8px">
+<button onclick="addCustomWebApp()">Add to Home Screen</button>
+</div>
 </div>
 
 <script>
-// ─── DEVICE ─────────────────────────────────────────────────
+// ─── DEVICE ─────────────────────────────────
 let deviceMode = localStorage.getItem('deviceMode');
-if (!deviceMode) document.getElementById('deviceChooser').style.display = 'flex';
-
-function setDevice(mode) {
-  localStorage.setItem('deviceMode', mode);
-  deviceMode = mode;
-  document.getElementById('deviceChooser').style.display = 'none';
+if(!deviceMode) document.getElementById('deviceChooser').style.display='flex';
+function setDevice(mode){
+  localStorage.setItem('deviceMode',mode);
+  deviceMode=mode;
+  document.getElementById('deviceChooser').style.display='none';
   applyLayout();
   render();
 }
-
-function applyLayout() {
+function applyLayout(){
   document.body.classList.remove('iphone','ipad');
-  document.body.classList.add(deviceMode === 'ipad' ? 'ipad' : 'iphone');
+  document.body.classList.add(deviceMode==='ipad'?'ipad':'iphone');
 }
+const dockLimit=deviceMode==='ipad'?6:4;
 
-// ─── APPS ───────────────────────────────────────────────────
-let apps = JSON.parse(localStorage.getItem("apps")) || [
-  { name: "Notes", id: "notes", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRC4wjEB3rsNICYcrehZUz4hvDbHg4LhMh_Xw&s", isCustom: false },
-  { name: "Calculator", id: "calculator", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8Je98ZqXhgWmbiohpPpuBO2oNgajOWG3mHw&s", isCustom: false },
-  { name: "Chrome", id: "browser", icon: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/e6/16/cd/e616cd30-09be-220e-fc18-d1ffea0ab74e/Placeholder.mill/200x200bb-75.webp", isCustom: false },
-  { name: "Settings", id: "settings", icon: "https://i.imgur.com/crghH6U.png", isCustom: false }
+// ─── APPS ─────────────────────────────
+let apps=JSON.parse(localStorage.getItem('apps'))||[
+  {name:"Notes",id:"notes",icon:"https://i.imgur.com/9D6V4Xx.png",isCustom:false,dock:true},
+  {name:"Calculator",id:"calculator",icon:"https://i.imgur.com/7Qh5aIX.png",isCustom:false,dock:true},
+  {name:"Browser",id:"browser",icon:"https://i.imgur.com/XV3Txqf.png",isCustom:false,dock:false},
+  {name:"Settings",id:"settings",icon:"https://i.imgur.com/crghH6U.png",isCustom:false,dock:false}
 ];
-let editMode = false;
+let editMode=false;
 let pressTimer;
+const homeEl=document.getElementById('home');
+const dockEl=document.getElementById('dock');
 
-const home = document.getElementById("home");
-const dock = document.getElementById("dock");
-
-function createAppEl(app) {
-  const el = document.createElement("div");
-  el.className = "app";
-  if (app.isCustom) el.classList.add("is-custom");
-  el.draggable = true;
-  el.dataset.id = app.id || app.url || app.name;
-  el.innerHTML = `<img src="${app.icon}"><center><span>${app.name}</span></center>`;
-
-  if (app.isCustom) {
-    const x = document.createElement("div");
-    x.className = "delete-x";
-    x.textContent = "×";
-    x.onclick = e => { 
-      e.stopImmediatePropagation(); 
-      if(confirm(`Delete "${app.name}"?`)) { 
-        apps = apps.filter(a=>a!==app); 
-        localStorage.setItem("apps",JSON.stringify(apps)); 
-        render(); 
-      } 
-    };
+// ─── CREATE APP ELEMENT ───────────────
+function createAppEl(app){
+  const el=document.createElement('div');
+  el.className='app';
+  if(app.isCustom) el.classList.add('is-custom');
+  el.draggable=true;
+  el.dataset.id=app.id||app.url||app.name;
+  el.innerHTML=`<img src="${app.icon}"><center><span>${app.name}</span></center>`;
+  if(app.isCustom){
+    const x=document.createElement('div');
+    x.className='delete-x';
+    x.textContent='×';
+    x.onclick=e=>{e.stopImmediatePropagation();if(confirm(`Delete "${app.name}"?`)){apps=apps.filter(a=>a!==app);saveApps();render();}};
     el.appendChild(x);
   }
-
-  el.onclick = () => {
-    if (editMode) return;
-    if (app.id) openApp(app.id);
-    else if (app.url) window.open(app.url, "_blank");
-  };
-
-  const start = () => pressTimer = setTimeout(() => enterEditMode(), 500);
-  const cancel = () => clearTimeout(pressTimer);
-  el.addEventListener("mousedown", start);
-  el.addEventListener("mouseup", cancel);
-  el.addEventListener("mouseleave", cancel);
-  el.addEventListener("touchstart", start);
-  el.addEventListener("touchend", cancel);
-  el.addEventListener("touchcancel", cancel);
-
-  el.addEventListener("dragstart", e => {
-    if (!editMode) { e.preventDefault(); return; }
-    e.dataTransfer.setData("text/plain", el.dataset.id);
-    el.classList.add("dragging");
-  });
-  el.addEventListener("dragend", () => { el.classList.remove("dragging"); syncOrder(); });
-
+  el.onclick=()=>{if(editMode) return;if(app.id) openApp(app.id); else if(app.url) window.open(app.url,'_blank');};
+  const start=()=>pressTimer=setTimeout(()=>enterEditMode(),500);
+  const cancel=()=>clearTimeout(pressTimer);
+  ['mousedown','touchstart'].forEach(evt=>el.addEventListener(evt,start));
+  ['mouseup','mouseleave','touchend','touchcancel'].forEach(evt=>el.addEventListener(evt,cancel));
+  el.addEventListener('dragstart',e=>{if(!editMode){e.preventDefault();return;}e.dataTransfer.setData('text/plain',el.dataset.id);el.classList.add('dragging');});
+  el.addEventListener('dragend',()=>{el.classList.remove('dragging'); syncOrder();});
   return el;
 }
 
-// ─── RENDER ─────────────────────────────────────────────────
-function render() {
+// ─── RENDER ─────────────────────────────
+function render(){
   renderDock();
   renderPages();
+  renderFavorites();
 }
-
-function renderDock() {
-  dock.innerHTML = "";
-  const dockCount = deviceMode === 'ipad' ? 6 : 4;
-  // take apps flagged as dock first
-  const dockApps = apps.filter(a=>a.dock).slice(0, dockCount);
-  dockApps.forEach(app => dock.appendChild(createAppEl(app)));
+function renderDock(){
+  dockEl.innerHTML='';
+  const dockApps=apps.filter(a=>a.dock).slice(0,dockLimit);
+  dockApps.forEach(a=>dockEl.appendChild(createAppEl(a)));
 }
-
-function renderPages() {
-  home.innerHTML = "";
-  const dockCount = deviceMode === 'ipad' ? 6 : 4;
-  const homeApps = apps.filter(a=>!a.dock);
-  const cols = deviceMode === 'ipad' ? 6 : 4;
-  const gap = deviceMode === 'ipad' ? '28px' : '22px';
-  const maxPerPage = cols * 5;
-  const numPages = Math.max(1, Math.ceil(homeApps.length / maxPerPage));
-
-  for (let p = 0; p < numPages; p++) {
-    const page = document.createElement('div');
-    page.className = 'page';
-    page.style.setProperty('--cols', cols);
-    page.style.setProperty('--gap', gap);
-
-    const start = p * maxPerPage;
-    const pageApps = homeApps.slice(start, start + maxPerPage);
-    pageApps.forEach(app => page.appendChild(createAppEl(app)));
-
-    home.appendChild(page);
-    page.addEventListener('dragover', handlePageDragOver);
-    page.addEventListener('drop', handlePageDrop);
+function renderPages(){
+  homeEl.innerHTML='';
+  const homeApps=apps.filter(a=>!a.dock);
+  const cols=deviceMode==='ipad'?6:4;
+  const gap=deviceMode==='ipad'?'28px':'22px';
+  const maxPerPage=cols*5;
+  const numPages=Math.max(1,Math.ceil(homeApps.length/maxPerPage));
+  for(let p=0;p<numPages;p++){
+    const page=document.createElement('div');
+    page.className='page';
+    page.style.setProperty('--cols',cols);
+    page.style.setProperty('--gap',gap);
+    homeApps.slice(p*maxPerPage,(p+1)*maxPerPage).forEach(a=>page.appendChild(createAppEl(a)));
+    homeEl.appendChild(page);
+    setupDrop(page,false);
   }
-
+  setupDrop(dockEl,true);
   createPageDots(numPages);
 }
 
-function createPageDots(num) {
-  let container = document.getElementById('pageDots');
-  container.innerHTML = '';
-  for (let i = 0; i < num; i++) {
-    const dot = document.createElement('div');
-    dot.className = 'dot';
-    if (i === 0) dot.classList.add('active');
-    dot.onclick = () => home.children[i]?.scrollIntoView({behavior:'smooth'});
+// ─── PAGE DOTS ─────────────────────────
+function createPageDots(num){
+  const container=document.getElementById('pageDots');
+  container.innerHTML='';
+  for(let i=0;i<num;i++){
+    const dot=document.createElement('div');
+    dot.className='dot';
+    if(i===0) dot.classList.add('active');
+    dot.onclick=()=>homeEl.children[i]?.scrollIntoView({behavior:'smooth'});
     container.appendChild(dot);
   }
 }
-
-home.addEventListener('scroll', () => {
-  const pageWidth = home.offsetWidth;
-  const current = Math.round(home.scrollLeft / pageWidth);
-  document.querySelectorAll('.dot').forEach((dot,i) => dot.classList.toggle('active', i===current));
+homeEl.addEventListener('scroll',()=>{
+  const pageWidth=homeEl.offsetWidth;
+  const current=Math.round(homeEl.scrollLeft/pageWidth);
+  document.querySelectorAll('.dot').forEach((dot,i)=>dot.classList.toggle('active',i===current));
 });
 
-// ─── DRAG HELPERS ───────────────────────────────────────────
-function getAfterElement(container, pos, horizontal) {
-  const items = Array.from(container.children).filter(c => !c.classList.contains("dragging"));
-  return items.reduce((closest, child) => {
-    const box = child.getBoundingClientRect();
-    const offset = horizontal ? pos - box.left - box.width/2 : pos - box.top - box.height/2;
-    return (offset < 0 && offset > closest.offset) ? {offset, element: child} : closest;
-  }, {offset: Number.NEGATIVE_INFINITY}).element;
+// ─── DRAG HELPERS ──────────────────────
+function getAfterElement(container,pos,horizontal){
+  const items=Array.from(container.children).filter(c=>!c.classList.contains('dragging'));
+  return items.reduce((closest,child)=>{
+    const box=child.getBoundingClientRect();
+    const offset=horizontal?pos-box.left-box.width/2:pos-box.top-box.height/2;
+    return (offset<0&&offset>closest.offset)?{offset,element:child}:closest;
+  },{offset:Number.NEGATIVE_INFINITY}).element;
 }
-
-function handlePageDragOver(e) {
-  e.preventDefault();
-  const dragging = document.querySelector('.dragging');
-  if (!dragging) return;
-  const after = getAfterElement(e.currentTarget, e.clientY);
-  if (after == null) e.currentTarget.appendChild(dragging);
-  else e.currentTarget.insertBefore(dragging, after);
-}
-
-function handlePageDrop(e) {
-  e.preventDefault();
-  syncOrder();
-}
-
-// Dock dragover
-dock.addEventListener("dragover", e => {
-  e.preventDefault();
-  const dragging = document.querySelector(".dragging");
-  if (!dragging) return;
-
-  const maxDock = deviceMode === 'ipad' ? 6 : 4;
-  if (dock.children.length >= maxDock && !dock.contains(dragging)) {
-    const last = dock.lastElementChild;
-    if (last) {
-      const homePage = home.firstElementChild || document.createElement('div');
-      if(!home.firstElementChild) home.appendChild(homePage);
-      homePage.appendChild(last);
-    }
-  }
-});
-
-dock.addEventListener("drop", e => {
-  e.preventDefault();
-  const dragging = document.querySelector(".dragging");
-  if (!dragging) return;
-  dock.appendChild(dragging);
-  syncOrder();
-});
-
-// ─── SYNC ORDER ─────────────────────────────────────────────
-function syncOrder() {
-  const dockApps = Array.from(dock.children).map(el => apps.find(a => (a.id||a.url||a.name)===el.dataset.id));
-  const homeApps = Array.from(home.querySelectorAll('.page .app')).map(el => apps.find(a => (a.id||a.url||a.name)===el.dataset.id)).filter(a=>!dockApps.includes(a));
-
-  // Mark dock apps
-  apps.forEach(a => { a.dock = dockApps.includes(a); });
-
-  // Update apps array: dock first, then home apps
-  apps = [...dockApps, ...homeApps];
-  localStorage.setItem("apps", JSON.stringify(apps));
-}
-
-// ─── EDIT MODE ──────────────────────────────────────────────
-function enterEditMode() {
-  editMode = true;
-  document.body.classList.add("edit-mode");
-  document.getElementById("done").style.display = "block";
-}
-function exitEditMode() {
-  editMode = false;
-  document.body.classList.remove("edit-mode");
-  document.getElementById("done").style.display = "none";
-  syncOrder();
-  render();
-}
-
-// ─── OPEN APP ──────────────────────────────────────────────
-function openApp(id) { document.getElementById(id)?.style.display='flex'; }
-function goHome() { document.querySelectorAll('.window').forEach(w=>w.style.display='none'); }
-
-// ─── WALLPAPER ─────────────────────────────────────────────
-function setWallpaper(input) {
-  const file = input.files[0];
-  if(!file) return;
-  const url = URL.createObjectURL(file);
-  document.getElementById('wallpaper').style.backgroundImage=`url('${url}')`;
-  localStorage.setItem('wallpaper', url);
-}
-const savedWallpaper = localStorage.getItem('wallpaper');
-if(savedWallpaper) document.getElementById('wallpaper').style.backgroundImage=`url('${savedWallpaper}')`;
-
-// ─── CUSTOM WEB APPS ──────────────────────────────────────
-function addCustomWebApp() {
-  const name = document.getElementById('webappName').value.trim();
-  const url = document.getElementById('webappUrl').value.trim();
-  const iconFile = document.getElementById('webappIcon').files[0];
-  if(!name || !url || !iconFile) return alert("Fill all fields");
-  const icon = URL.createObjectURL(iconFile);
-  const app = {name,url,icon,isCustom:true};
-  apps.push(app);
-  syncOrder();
-  render();
-}
-
-// ─── BROWSER ──────────────────────────────────────────────
-let favorites = JSON.parse(localStorage.getItem('favorites')||'[]');
-function addFavorite() {
-  const url = document.getElementById('favUrl').value.trim();
-  if(!url) return;
-  favorites.push(url);
-  localStorage.setItem('favorites', JSON.stringify(favorites));
-  renderFavorites();
-}
-function renderFavorites() {
-  const container = document.getElementById('favorites');
-  container.innerHTML = '';
-  favorites.forEach(f => {
-    const el = document.createElement('div');
-    el.className='favorite';
-    el.textContent=f;
-    el.onclick=()=>window.open(f,'_blank');
-    container.appendChild(el);
+function setupDrop(container,isDock){
+  container.addEventListener('dragover',e=>e.preventDefault());
+  container.addEventListener('drop',e=>{
+    e.preventDefault();
+    const dragging=document.querySelector('.dragging');
+    if(!dragging) return;
+    const app=apps.find(a=>(a.id||a.url||a.name)===dragging.dataset.id);
+    if(!app) return;
+    if(isDock && apps.filter(a=>a.dock).length>=dockLimit && !app.dock) return;
+    app.dock=isDock;
+    syncOrder();
+    render();
   });
 }
-renderFavorites();
 
-// ─── CALCULATOR ───────────────────────────────────────────
-let calcValue=0, currentOp=null, newNum=false;
-const display=document.getElementById('calcDisplay');
-function num(n){ if(newNum){display.textContent=''; newNum=false;} display.textContent+=n; }
-function dot(){ if(!display.textContent.includes('.')) display.textContent+='.'; }
-function clearCalc(){ display.textContent='0'; calcValue=0; currentOp=null; newNum=true; }
-function setOp(op){ calcValue=parseFloat(display.textContent); currentOp=op; newNum=true; }
-function equals(){ if(currentOp){ const curr=parseFloat(display.textContent); let res; switch(currentOp){ case'+':res=calcValue+curr;break; case'-':res=calcValue-curr;break; case'*':res=calcValue*curr;break; case'/':res=calcValue/curr;break;} display.textContent=res; currentOp=null; newNum=true; } }
-function toggleSign(){ display.textContent=(parseFloat(display.textContent)||0)*-1; }
-function percent(){ display.textContent=(parseFloat(display.textContent)||0)/100; }
+// ─── EDIT MODE ─────────────────────────
+function enterEditMode(){editMode=true;document.body.classList.add('edit-mode');document.getElementById('done').style.display='block';}
+function exitEditMode(){editMode=false;document.body.classList.remove('edit-mode');document.getElementById('done').style.display='none';syncOrder();render();}
+function syncOrder(){saveApps();}
+function saveApps(){localStorage.setItem('apps',JSON.stringify(apps));}
+
+// ─── WINDOWS ───────────────────────────
+function openApp(id){document.querySelectorAll('.window').forEach(w=>w.style.display='none');document.getElementById(id)?.style.display='flex';}
+function goHome(){document.querySelectorAll('.window').forEach(w=>w.style.display='none');}
+
+// ─── NOTES ─────────────────────────────
+const notesText=document.getElementById('notesText');
+notesText.value=localStorage.notes||'';
+notesText.oninput=e=>localStorage.notes=e.target.value;
+
+// ─── CALCULATOR ────────────────────────
+let current='0',operator=null,stored=null;
+const disp=document.getElementById('calcDisplay');
+function update(){disp.textContent=current;}
+function num(n){current=current==='0'?''+n:current+n;update();}
+function dot(){if(!current.includes('.')) current+='.';update();}
+function clearCalc(){current='0';stored=null;operator=null;update();}
+function toggleSign(){current=''+(-parseFloat(current));update();}
+function percent(){current=''+(parseFloat(current)/100);update();}
+function setOp(op){stored=parseFloat(current);operator=op;current='0';}
+function equals(){const a=stored,b=parseFloat(current);if(operator==='+')current=''+(a+b);if(operator==='-')current=''+(a-b);if(operator==='*')current=''+(a*b);if(operator==='/')current=b?''+(a/b):'0';update();}
+
+// ─── BROWSER FAVORITES ─────────────────
+let favorites=JSON.parse(localStorage.favorites||'[]');
+function renderFavorites(){const list=document.getElementById('favorites');list.innerHTML='';favorites.forEach(url=>{const d=document.createElement('div');d.className='favorite';d.textContent=url;d.onclick=()=>window.open(url.startsWith('http')?url:'https://'+url,'_blank');list.appendChild(d);});}
+function addFavorite(){const url=document.getElementById('favUrl').value.trim();if(!url)return;favorites.push(url.startsWith('http')?url:'https://'+url);localStorage.favorites=JSON.stringify(favorites);document.getElementById('favUrl').value='';renderFavorites();}
+function openBrowserUrl(){const url=document.getElementById('browserUrl').value.trim();if(!url)return;window.open(url.startsWith('http')?url:'https://'+url,'_blank');}
+
+// ─── CUSTOM WEB APP ───────────────────
+function addCustomWebApp(){
+  const name=document.getElementById('webappName').value.trim();
+  const url=document.getElementById('webappUrl').value.trim();
+  const iconFile=document.getElementById('webappIcon').files[0];
+  if(!name||!url||!iconFile)return alert('Fill all fields');
+  const reader=new FileReader();
+  reader.onload=e=>{
+    apps.push({name:url,name:name,url:url,icon:e.target.result,isCustom:true,dock:false});
+    saveApps();render();
+  }
+  reader.readAsDataURL(iconFile);
+  document.getElementById('webappName').value='';
+  document.getElementById('webappUrl').value='';
+  document.getElementById('webappIcon').value='';
+}
+
+// ─── WALLPAPER ───────────────────────
+function setWallpaper(input){
+  const file=input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{document.getElementById('wallpaper').style.backgroundImage=`url(${e.target.result})`;localStorage.wallpaper=e.target.result;};
+  reader.readAsDataURL(file);
+}
+if(localStorage.wallpaper) document.getElementById('wallpaper').style.backgroundImage=`url(${localStorage.wallpaper})`;
 
 applyLayout();
 render();
