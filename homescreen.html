@@ -8,11 +8,11 @@
 <style>
 body{margin:0;font-family:'SF Pro Display',-apple-system,sans-serif;background:#000;color:#fff;overflow:hidden}
 #wallpaper{position:fixed;inset:0;background:#000 center/cover no-repeat;z-index:0}
-#home{position:relative;z-index:1;height:calc(100vh-220px);display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+#home{position:relative;z-index:1;height:calc(100vh - 220px);display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
 .page{flex:0 0 100%;height:100%;padding:20px;display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:var(--gap);align-content:start;overflow-y:auto;scroll-snap-align:start}
 #dock{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.25);backdrop-filter:blur(20px);border-radius:28px;display:flex;justify-content:center;z-index:2}
-body.iphone #dock{width:min(420px,calc(100%-40px));padding:14px 20px;gap:24px}
-body.ipad #dock{width:min(620px,calc(100%-48px));padding:18px 28px;gap:32px}
+body.iphone #dock{width:min(420px,calc(100% - 40px));padding:14px 20px;gap:24px}
+body.ipad #dock{width:min(620px,calc(100% - 48px));padding:18px 28px;gap:32px}
 .app{text-align:center;color:white;cursor:pointer;position:relative;transition:transform .15s}
 .app img{width:64px;height:64px;border-radius:14px}
 body.ipad .app img{width:72px;height:72px;border-radius:18px}
@@ -32,8 +32,8 @@ body.edit-mode .app{animation:wiggle 0.8s infinite}
 .header{height:50px;display:flex;align-items:center;padding:0 14px;background:#111;border-bottom:1px solid #222}
 .back{font-size:18px;cursor:pointer}
 .title{margin-left:10px;font-weight:600}
-input,textarea{width:100%;background:#111;color:white;border:none;border-radius:10px;padding:10px;font-size:16px}
-button{padding:12px;border-radius:12px;border:none;background:#007aff;color:white;font-size:16px;margin-top:8px}
+input,textarea{width:100%;background:#111;color:white;border:none;border-radius:10px;padding:10px;font-size:16px;box-sizing:border-box}
+button{padding:12px;border-radius:12px;border:none;background:#007aff;color:white;font-size:16px;margin-top:8px;cursor:pointer}
 .calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:10px}
 .calc-grid button{font-size:22px;border-radius:50%;padding:20px}
 .gray{background:#a5a5a5;color:black}
@@ -122,19 +122,26 @@ button{padding:12px;border-radius:12px;border:none;background:#007aff;color:whit
 <script>
 // ─── DEVICE ─────────────────────────────────
 let deviceMode = localStorage.getItem('deviceMode');
-if(!deviceMode) document.getElementById('deviceChooser').style.display='flex';
+let dockLimit = 4;
+
+if(!deviceMode) {
+  document.getElementById('deviceChooser').style.display='flex';
+}
+
 function setDevice(mode){
   localStorage.setItem('deviceMode',mode);
   deviceMode=mode;
+  dockLimit = deviceMode==='ipad' ? 6 : 4;
   document.getElementById('deviceChooser').style.display='none';
   applyLayout();
   render();
 }
+
 function applyLayout(){
   document.body.classList.remove('iphone','ipad');
   document.body.classList.add(deviceMode==='ipad'?'ipad':'iphone');
+  dockLimit = deviceMode==='ipad' ? 6 : 4;
 }
-const dockLimit=deviceMode==='ipad'?6:4;
 
 // ─── APPS ─────────────────────────────
 let apps=JSON.parse(localStorage.getItem('apps'))||[
@@ -160,7 +167,7 @@ function createAppEl(app){
     const x=document.createElement('div');
     x.className='delete-x';
     x.textContent='×';
-    x.onclick=e=>{e.stopImmediatePropagation();if(confirm(`Delete "${app.name}"?`)){apps=apps.filter(a=>a!==app);saveApps();render();}};
+    x.onclick=e=>{e.stopPropagation();if(confirm(`Delete "${app.name}"?`)){apps=apps.filter(a=>a!==app);saveApps();render();}};
     el.appendChild(x);
   }
   el.onclick=()=>{if(editMode) return;if(app.id) openApp(app.id); else if(app.url) window.open(app.url,'_blank');};
@@ -169,7 +176,7 @@ function createAppEl(app){
   ['mousedown','touchstart'].forEach(evt=>el.addEventListener(evt,start));
   ['mouseup','mouseleave','touchend','touchcancel'].forEach(evt=>el.addEventListener(evt,cancel));
   el.addEventListener('dragstart',e=>{if(!editMode){e.preventDefault();return;}e.dataTransfer.setData('text/plain',el.dataset.id);el.classList.add('dragging');});
-  el.addEventListener('dragend',()=>{el.classList.remove('dragging'); syncOrder();});
+  el.addEventListener('dragend',()=>{el.classList.remove('dragging'); saveApps();});
   return el;
 }
 
@@ -241,19 +248,18 @@ function setupDrop(container,isDock){
     if(!app) return;
     if(isDock && apps.filter(a=>a.dock).length>=dockLimit && !app.dock) return;
     app.dock=isDock;
-    syncOrder();
+    saveApps();
     render();
   });
 }
 
 // ─── EDIT MODE ─────────────────────────
 function enterEditMode(){editMode=true;document.body.classList.add('edit-mode');document.getElementById('done').style.display='block';}
-function exitEditMode(){editMode=false;document.body.classList.remove('edit-mode');document.getElementById('done').style.display='none';syncOrder();render();}
-function syncOrder(){saveApps();}
+function exitEditMode(){editMode=false;document.body.classList.remove('edit-mode');document.getElementById('done').style.display='none';saveApps();render();}
 function saveApps(){localStorage.setItem('apps',JSON.stringify(apps));}
 
 // ─── WINDOWS ───────────────────────────
-function openApp(id){document.querySelectorAll('.window').forEach(w=>w.style.display='none');document.getElementById(id)?.style.display='flex';}
+function openApp(id){document.querySelectorAll('.window').forEach(w=>w.style.display='none');const el=document.getElementById(id);if(el)el.style.display='flex';}
 function goHome(){document.querySelectorAll('.window').forEach(w=>w.style.display='none');}
 
 // ─── NOTES ─────────────────────────────
@@ -287,8 +293,9 @@ function addCustomWebApp(){
   if(!name||!url||!iconFile)return alert('Fill all fields');
   const reader=new FileReader();
   reader.onload=e=>{
-    apps.push({name:url,name:name,url:url,icon:e.target.result,isCustom:true,dock:false});
+    apps.push({name:name,url:url,icon:e.target.result,isCustom:true,dock:false});
     saveApps();render();
+    goHome();
   }
   reader.readAsDataURL(iconFile);
   document.getElementById('webappName').value='';
@@ -306,7 +313,9 @@ function setWallpaper(input){
 }
 if(localStorage.wallpaper) document.getElementById('wallpaper').style.backgroundImage=`url(${localStorage.wallpaper})`;
 
-applyLayout();
+if(deviceMode) {
+  applyLayout();
+}
 render();
 </script>
 </body>
