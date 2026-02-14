@@ -196,7 +196,7 @@ function createAppEl(app) {
   if (app.isCustom) el.classList.add("is-custom");
   el.draggable = true;
   el.dataset.id = app.id || app.url || app.name;
-  el.innerHTML = `<img src="${app.icon}"><span>${app.name}</span>`;
+  el.innerHTML = `<img src="${app.icon}"><center><span>${app.name}</span></center>`;
 
   if (app.isCustom) {
     const x = document.createElement("div");
