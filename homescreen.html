@@ -21,7 +21,7 @@ body.ipad .app span { font-size:13px; margin-top:8px; }
 /* Shared */
 #home {
   position:relative; z-index:1;
-  height: calc(100vh - 220px); /* room for status + dots + dock */
+  height: calc(100vh - 220px);
   display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scroll-behavior:smooth;
   -webkit-overflow-scrolling:touch;
 }
@@ -52,7 +52,6 @@ body.edit-mode .app { animation:wiggle 0.8s infinite; }
 
 #done { position:fixed; top:24px; right:24px; background:rgba(0,122,255,0.85); color:white; padding:7px 20px; border-radius:30px; font-size:17px; font-weight:600; display:none; z-index:30; cursor:pointer; }
 
-/* Page dots */
 #pageDots {
   position:fixed; bottom:155px; left:50%; transform:translateX(-50%);
   display:flex; gap:6px; z-index:5;
@@ -62,7 +61,7 @@ body.edit-mode .app { animation:wiggle 0.8s infinite; }
 }
 .dot.active { background:white; transform:scale(1.3); }
 
-/* Windows (unchanged) */
+/* Windows */
 .window { position:fixed; inset:0; background:#000; color:white; display:none; flex-direction:column; z-index:10; }
 .header { height:50px; display:flex; align-items:center; padding:0 14px; background:#111; border-bottom:1px solid #222; }
 .back { font-size:18px; cursor:pointer; }
@@ -77,10 +76,14 @@ button { padding:12px; border-radius:12px; border:none; background:#007aff; colo
 .wide { grid-column:span 2; border-radius:40px; }
 .favorite { padding:12px; border-bottom:1px solid #222; word-break:break-all; cursor:pointer; }
 
-/* Chooser */
-#deviceChooser { position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:999; display:none; flex-direction:column; align-items:center; justify-content:center; color:white; gap:40px; }
+#deviceChooser {
+  position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:999;
+  display:none; flex-direction:column; align-items:center; justify-content:center; color:white; gap:40px;
+}
 #deviceChooser h1 { font-size:28px; font-weight:600; }
-#deviceChooser button { background:#007aff; color:white; border:none; border-radius:14px; padding:16px 40px; font-size:18px; cursor:pointer; }
+#deviceChooser button {
+  background:#007aff; color:white; border:none; border-radius:14px; padding:16px 40px; font-size:18px; cursor:pointer;
+}
 </style>
 </head>
 <body>
@@ -155,21 +158,7 @@ button { padding:12px; border-radius:12px; border:none; background:#007aff; colo
     <button onclick="addCustomWebApp()">Add to Home Screen</button>
   </div>
 </div>
-  
-<div id="chrome" class="window">
-  <div class="header"><div class="back" onclick="goHome()">‹ Home</div><div class="title">Chrome</div></div>
-  <div style="padding:15px;">
-    
-<button onclick="goToGoogle()">Take me to Google</button>
 
-    <script>
-        function goToGoogle() {
-            window.location.href = "https://google.com";
-        }
-    </script>
-  </div>
-</div>
-  
 <script>
 // ─── DEVICE ─────────────────────────────────────────────────
 let deviceMode = localStorage.getItem('deviceMode');
@@ -193,8 +182,7 @@ let apps = JSON.parse(localStorage.getItem("apps")) || [
   { name: "Notes", id: "notes", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRC4wjEB3rsNICYcrehZUz4hvDbHg4LhMh_Xw&s", isCustom: false },
   { name: "Calculator", id: "calculator", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8Je98ZqXhgWmbiohpPpuBO2oNgajOWG3mHw&s", isCustom: false },
   { name: "Chrome", id: "browser", icon: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/e6/16/cd/e616cd30-09be-220e-fc18-d1ffea0ab74e/Placeholder.mill/200x200bb-75.webp", isCustom: false },
-  { name: "Settings", id: "settings", icon: "https://i.imgur.com/crghH6U.png", isCustom: false },
-  { name: "Google", id: "google", icon: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/ed/8c/d5/ed8cd56b-5acb-68e8-b0f7-e24e6bfc75d3/Placeholder.mill/200x200bb-75.webp", isCustom: false }
+  { name: "Settings", id: "settings", icon: "https://i.imgur.com/crghH6U.png", isCustom: false }
 ];
 let editMode = false;
 let pressTimer;
@@ -208,8 +196,7 @@ function createAppEl(app) {
   if (app.isCustom) el.classList.add("is-custom");
   el.draggable = true;
   el.dataset.id = app.id || app.url || app.name;
-  el.dataset.pinned = !app.isCustom;
-  el.innerHTML = `<img src="${app.icon}"><center><span>${app.name}</span></center`;
+  el.innerHTML = `<img src="${app.icon}"><span>${app.name}</span>`;
 
   if (app.isCustom) {
     const x = document.createElement("div");
@@ -264,7 +251,7 @@ function renderPages() {
   const homeApps = apps.slice(dockCount);
   const cols = deviceMode === 'ipad' ? 6 : 4;
   const gap = deviceMode === 'ipad' ? '28px' : '22px';
-  const maxPerPage = cols * 5; // 20 iPhone / 30 iPad
+  const maxPerPage = cols * 5;
 
   const numPages = Math.max(1, Math.ceil(homeApps.length / maxPerPage));
 
@@ -279,7 +266,6 @@ function renderPages() {
     pageApps.forEach(app => page.appendChild(createAppEl(app)));
 
     home.appendChild(page);
-
     page.addEventListener('dragover', handlePageDragOver);
     page.addEventListener('drop', handlePageDrop);
   }
@@ -287,7 +273,6 @@ function renderPages() {
   createPageDots(numPages);
 }
 
-// ─── PAGE DOTS ──────────────────────────────────────────────
 function createPageDots(num) {
   let container = document.getElementById('pageDots');
   container.innerHTML = '';
@@ -307,21 +292,19 @@ home.addEventListener('scroll', () => {
 });
 
 // ─── DRAG HELPERS ───────────────────────────────────────────
-function getAfterElement(container, y) {
-  const items = [...container.querySelectorAll('.app:not(.dragging)')];
+function getAfterElement(container, pos, horizontal) {
+  const items = Array.from(container.children).filter(c => !c.classList.contains("dragging"));
   return items.reduce((closest, child) => {
     const box = child.getBoundingClientRect();
-    const offset = y - box.top - box.height / 2;
-    if (offset < 0 && offset > closest.offset) return {offset, element: child};
-    return closest;
+    const offset = horizontal ? pos - box.left - box.width/2 : pos - box.top - box.height/2;
+    return (offset < 0 && offset > closest.offset) ? {offset, element: child} : closest;
   }, {offset: Number.NEGATIVE_INFINITY}).element;
 }
 
 function handlePageDragOver(e) {
   e.preventDefault();
   const dragging = document.querySelector('.dragging');
-  if (!dragging || dragging.dataset.pinned === "true") return;
-
+  if (!dragging) return;
   const after = getAfterElement(e.currentTarget, e.clientY);
   if (after == null) e.currentTarget.appendChild(dragging);
   else e.currentTarget.insertBefore(dragging, after);
@@ -332,7 +315,7 @@ function handlePageDrop(e) {
   syncOrder();
 }
 
-// Dock drag (with kick only custom apps)
+// Dock dragover + auto-kick when full (NOW ALLOWS ANY APP)
 dock.addEventListener("dragover", e => {
   e.preventDefault();
   const dragging = document.querySelector(".dragging");
@@ -340,20 +323,15 @@ dock.addEventListener("dragover", e => {
 
   const maxDock = deviceMode === 'ipad' ? 6 : 4;
   if (dock.children.length >= maxDock && !dock.contains(dragging)) {
-    let lastCustom = null;
-    for (let i = dock.children.length-1; i >= 0; i--) {
-      if (dock.children[i].dataset.pinned !== "true") {
-        lastCustom = dock.children[i];
-        break;
-      }
+    const last = dock.lastElementChild;
+    if (last) {
+      const lastPage = home.lastElementChild;
+      if (lastPage) lastPage.appendChild(last);
+      else home.appendChild(last);
     }
-    if (lastCustom) {
-      const pages = home.children;
-      if (pages.length) pages[pages.length-1].appendChild(lastCustom);
-    } else return; // full of built-ins → block
   }
 
-  const after = getAfterElement(dock, e.clientX); // horizontal version not needed for dock since we use same function with x
+  const after = getAfterElement(dock, e.clientX, true);
   dock.insertBefore(dragging, after || null);
 });
 
@@ -371,12 +349,10 @@ function exitEditMode() {
 
 function syncOrder() {
   const newApps = [];
-  // dock first
   Array.from(dock.children).forEach(el => {
     const found = apps.find(a => (a.id || a.url || a.name) === el.dataset.id);
     if (found) newApps.push(found);
   });
-  // then all pages in order
   Array.from(home.children).forEach(page => {
     Array.from(page.children).forEach(el => {
       const found = apps.find(a => (a.id || a.url || a.name) === el.dataset.id);
@@ -387,16 +363,16 @@ function syncOrder() {
   localStorage.setItem("apps", JSON.stringify(apps));
 }
 
-// ─── WINDOWS & FEATURES (unchanged) ─────────────────────────
+// ─── WINDOWS & FEATURES ─────────────────────────────────────
 function openApp(id) { document.querySelectorAll(".window").forEach(w=>w.style.display="none"); document.getElementById(id).style.display="flex"; }
 function goHome() { document.querySelectorAll(".window").forEach(w=>w.style.display="none"); }
 
-// Notes, Calculator, Browser, Custom Web App, Wallpaper → same as your last version
+// Notes
 const notesText = document.getElementById("notesText");
 notesText.value = localStorage.notes || "";
 notesText.oninput = e => localStorage.notes = e.target.value;
 
-// Calculator
+// Calculator (same as before)
 let current = "0", operator = null, stored = null;
 const disp = document.getElementById("calcDisplay");
 function update(){ disp.textContent = current; }
@@ -415,7 +391,7 @@ function equals(){
   update();
 }
 
-// Browser
+// Browser (same)
 let favorites = JSON.parse(localStorage.favorites || "[]");
 function renderFavorites() {
   const list = document.getElementById("favorites");
