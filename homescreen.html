@@ -5,845 +5,286 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>iOS Home</title>
 <link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
+
 <style>
-    :root {
-      --sf: "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      --radius-app: 18px;
-      --radius-dock: 32px;
-      --blur: 24px;
-      --saturation: 180%;
-    }
+:root{
+  --sf:"SF Pro Display",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  --radius-app:18px;
+  --radius-dock:32px;
+}
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
 
-    html, body {
-      height: 100%;
-      font-family: var(--sf);
-      background: #000;
-      color: white;
-      overflow: hidden;
-      touch-action: manipulation;
-    }
+html,body{
+  height:100%;
+  font-family:var(--sf);
+  background:#000;
+  color:white;
+  overflow:hidden;
+}
 
-    #wallpaper {
-      position: fixed;
-      inset: 0;
-      background: #000 center/cover no-repeat;
-      filter: brightness(0.92) saturate(var(--saturation));
-      z-index: 0;
-    }
+#wallpaper{
+  position:fixed;
+  inset:0;
+  background:#000 center/cover no-repeat;
+  z-index:0;
+}
 
-    /* Glass layer overlay (vibrancy feel) */
-    #glass-overlay {
-      position: fixed;
-      inset: 0;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.4));
-      backdrop-filter: blur(2px);
-      z-index: 0;
-      pointer-events: none;
-    }
+#home{
+  position:relative;
+  z-index:1;
+  height:calc(100vh - 220px);
+  display:flex;
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+}
 
-#home{position:relative;z-index:1;height:calc(100vh - 220px);display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
-.page{flex:0 0 100%;height:100%;padding:20px;display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:var(--gap);align-content:start;overflow-y:auto;scroll-snap-align:start}
+.page{
+  flex:0 0 100%;
+  height:100%;
+  padding:20px;
+  display:grid;
+  grid-template-columns:repeat(var(--cols),1fr);
+  gap:var(--gap);
+  align-content:start;
+  overflow-y:auto;
+  scroll-snap-align:start;
+}
 
-    /* Dock */
-    #dock {
-      position: fixed;
-      bottom: env(safe-area-inset-bottom, 12px);
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
-      background: rgba(60,60,70,0.38);
-      backdrop-filter: blur(var(--blur)) saturate(var(--saturation));
-      -webkit-backdrop-filter: blur(var(--blur)) saturate(var(--saturation));
-      border-radius: var(--radius-dock);
-      border: 1px solid rgba(255,255,255,0.08);
-      box-shadow: 0 16px 40px #000C;
-      display: flex;
-      justify-content: center;
-    }
+#dock{
+  position:fixed;
+  bottom:env(safe-area-inset-bottom,12px);
+  left:50%;
+  transform:translateX(-50%);
+  z-index:10;
+  background:rgba(40,40,45,0.95);
+  border-radius:var(--radius-dock);
+  display:flex;
+  justify-content:center;
+}
 
 body.iphone #dock{width:min(420px,calc(100% - 40px));padding:14px 20px;gap:24px}
 body.ipad #dock{width:min(620px,calc(100% - 48px));padding:18px 28px;gap:32px}
 
-    .app {
-      text-align: center;
-      color: white;
-      cursor: pointer;
-      position: relative;
-      transition: transform 0.14s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-      user-select: none;
-    }
+.app{
+  text-align:center;
+  cursor:pointer;
+  position:relative;
+  transition:transform .15s;
+}
 
-    .app:active {
-      transform: scale(0.92);
-    }
-
-    .app img {
-      border-radius: var(--radius-app);
-      box-shadow: 
-        0 4px 12px rgba(0,0,0,0.5),
-        inset 0 1px 0 rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(4px);
-      transition: box-shadow 0.2s;
-    }
+.app:active{transform:scale(.92)}
 
 body.iphone .app img{width:64px;height:64px;border-radius:14px}
 body.ipad .app img{width:72px;height:72px;border-radius:18px}
 
-    .app span {
-      display: block;
-      margin-top: 8px;
-      font-size: 11.5px;
-      line-height: 1.2;
-      opacity: 0.92;
-      text-shadow: 0 1px 3px #0008;
-    }
+.app span{
+  display:block;
+  margin-top:6px;
+  font-size:12px;
+}
 
-body.iphone .app span{font-size:12px;margin-top:6px}
-body.ipad .app span{font-size:13px;margin-top:8px}
+.delete-x{
+  position:absolute;
+  top:-8px;
+  right:-8px;
+  width:24px;
+  height:24px;
+  background:#ff3b30;
+  border-radius:50%;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+}
 
-.app.dragging{opacity:0.6;transform:scale(1.12);z-index:10}
-.delete-x{position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:#ff3b30;color:white;border-radius:50%;font-size:19px;font-weight:bold;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.5)}
 body.edit-mode .app.is-custom .delete-x{display:flex}
-body.edit-mode .app{animation:wiggle 0.8s infinite}
-@keyframes wiggle{0%,100%{transform:rotate(-3deg);}25%{transform:rotate(3deg);}50%{transform:rotate(-2deg);}75%{transform:rotate(2deg);}}
-#done{position:fixed;top:24px;right:24px;background:rgba(0,122,255,0.85);color:white;padding:7px 20px;border-radius:30px;font-size:17px;font-weight:600;display:none;z-index:30;cursor:pointer}
-#pageDots{position:fixed;bottom:155px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:5}
-.dot{width:8px;height:8px;background:rgba(255,255,255,0.5);border-radius:50%;transition:all .2s}
-.dot.active{background:white;transform:scale(1.3)}
+body.edit-mode .app{animation:wiggle .8s infinite}
 
-    /* Window */
-    .window {
-      position: fixed;
-      inset: 0;
-      z-index: 20;
-      background: #000;
-      color: white;
-      display: none;
-      flex-direction: column;
-      transition: opacity 0.3s ease;
-    }
+@keyframes wiggle{
+  0%,100%{transform:rotate(-3deg)}
+  25%{transform:rotate(3deg)}
+  50%{transform:rotate(-2deg)}
+  75%{transform:rotate(2deg)}
+}
 
-    .header {
-      height: 54px;
-      display: flex;
-      align-items: center;
-      padding: 0 16px;
-      background: rgba(18,18,20,0.92);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      font-size: 17px;
-      font-weight: 600;
-    }
+#done{
+  position:fixed;
+  top:24px;
+  right:24px;
+  background:#007aff;
+  padding:7px 20px;
+  border-radius:30px;
+  display:none;
+  cursor:pointer;
+}
 
-    .back {
-      color: #007aff;
-      font-weight: 500;
-      cursor: pointer;
-      padding: 8px 12px 8px 0;
-    }
+.window{
+  position:fixed;
+  inset:0;
+  z-index:20;
+  background:#000;
+  display:none;
+  flex-direction:column;
+}
 
-.title{margin-left:10px;font-weight:600}
+.header{
+  height:54px;
+  display:flex;
+  align-items:center;
+  padding:0 16px;
+  border-bottom:1px solid #222;
+  font-size:17px;
+  font-weight:600;
+}
 
-    textarea, input {
-      width: 100%;
-      background: rgba(30,30,35,0.7);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
-      padding: 12px 16px;
-      font-size: 17px;
-      backdrop-filter: blur(10px);
-      resize: none;
-      box-sizing: border-box;
-      -webkit-appearance: none;
-      appearance: none;
-    }
-    
-    input[type="file"] {
-      padding: 8px;
-      font-size: 15px;
-    }
-
-    button {
-      background: #007aff;
-      color: white;
-      border: none;
-      border-radius: 12px;
-      padding: 14px 20px;
-      font-size: 17px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.2s;
-      margin-top: 8px;
-    }
-
-    button:active { background: #0062cc; }
-
-    /* Calculator */
-    #calcDisplay {
-      font-size: 72px;
-      font-weight: 300;
-      text-align: right;
-      padding: 20px 24px;
-      min-height: 120px;
-      background: linear-gradient(to bottom, #000, #111);
-    }
-
-    .calc-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-      padding: 20px;
-    }
-
-    .calc-grid button {
-      aspect-ratio: 1;
-      font-size: 32px;
-      border-radius: 50%;
-      background: #333;
-      color: white;
-      border: none;
-      transition: all 0.1s;
-      margin-top: 0;
-    }
-
-    .calc-grid button:active { transform: scale(0.92); }
-
-.gray{background:#a5a5a5;color:black}
-.dark{background:#333;color:white}
-.orange{background:#ff9f0a;color:white}
-.wide{grid-column:span 2;border-radius:40px}
-.favorite{padding:12px;border-bottom:1px solid #222;word-break:break-all;cursor:pointer}
-#deviceChooser{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;gap:40px}
-#deviceChooser h1{font-size:28px;font-weight:600}
-#deviceChooser button{background:#007aff;color:white;border:none;border-radius:14px;padding:16px 40px;font-size:18px;cursor:pointer}
+textarea,input{
+  width:100%;
+  background:#111;
+  color:white;
+  border:1px solid #222;
+  border-radius:12px;
+  padding:12px;
+  font-size:17px;
+}
+button{
+  background:#007aff;
+  color:white;
+  border:none;
+  border-radius:12px;
+  padding:14px;
+  font-size:17px;
+  margin-top:8px;
+}
 </style>
 </head>
 <body>
+
 <div id="wallpaper"></div>
-<div id="glass-overlay"></div>
 <div id="home"></div>
 <div id="dock"></div>
-<div id="pageDots"></div>
 <div id="done" onclick="exitEditMode()">Done</div>
 
-<!-- DEVICE CHOOSER -->
-<div id="deviceChooser">
-<h1>Choose your device</h1>
-<div style="display:flex;gap:30px">
-<button onclick="setDevice('iphone')">iPhone</button>
-<button onclick="setDevice('ipad')">iPad</button>
-</div>
-</div>
-
-<!-- WINDOWS -->
-<div id="notes" class="window">
-  <div class="header" style="background:rgba(18,18,20,0.92);color:#fff;border-bottom:1px solid rgba(255,255,255,0.06);">
-    <div class="title" style="color:#fff;flex:1;text-align:center;font-size:17px;font-weight:600;">Notes</div>
-    <div style="color:#007aff;cursor:pointer;padding:8px;" onclick="createNewNote()">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 5v14M5 12h14"/>
-      </svg>
-    </div>
-  </div>
-  
-  <div style="flex:1;background:#000;overflow-y:auto;padding-bottom:80px;">
-    <div style="padding:16px 20px;background:rgba(18,18,20,0.92);border-bottom:1px solid rgba(255,255,255,0.06);">
-      <input id="notesSearch" placeholder="Search" style="background:rgba(60,60,67,0.6);border:none;border-radius:10px;padding:8px 12px;font-size:15px;width:100%;color:#fff;" />
-    </div>
-    
-    <div style="padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(18,18,20,0.92);">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div style="width:32px;height:32px;background:#ffc107;border-radius:6px;display:flex;align-items:center;justify-content:center;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2">
-            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-            <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
-          </svg>
-        </div>
-        <span style="color:#ffc107;font-size:15px;font-weight:500;">Sort by Date Edited</span>
-      </div>
-      <span style="color:#ffc107;">›</span>
-    </div>
-    
-    <div id="notesList" style="background:#000;"></div>
-    
-    <div style="padding:60px 20px 20px;text-align:center;color:#888;font-size:13px;background:#000;">
-      <span id="notesCount">0 Notes</span>
-    </div>
-  </div>
-  
-  <!-- System Navigation Bar -->
-  <div style="position:fixed;bottom:0;left:0;right:0;height:50px;background:#000;display:flex;justify-content:center;align-items:center;padding:0 20px;padding-bottom:env(safe-area-inset-bottom,10px);border-top:1px solid #333;">
-    <div style="width:60px;height:6px;background:#fff;border-radius:3px;cursor:pointer;" onclick="goHome()"></div>
-  </div>
-</div>
-
-<div id="noteEditor" class="window">
-  <div class="header" style="background:rgba(18,18,20,0.92);color:#fff;border-bottom:1px solid rgba(255,255,255,0.06);">
-    <div class="back" onclick="closeNoteEditor()" style="color:#007aff;">‹ Notes</div>
-    <div style="flex:1;"></div>
-    <div onclick="deleteCurrentNote()" style="color:#007aff;cursor:pointer;padding:8px;display:flex;align-items:center;justify-content:center;">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="pointer-events:none;">
-        <polyline points="3 6 5 6 21 6"></polyline>
-        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-      </svg>
-    </div>
-  </div>
-  <div style="flex:1;background:#000;padding:20px;overflow-y:auto;padding-bottom:80px;">
-    <input id="noteTitle" placeholder="Title" style="width:100%;border:none;font-size:24px;font-weight:600;margin-bottom:8px;background:#000;color:#fff;outline:none;" />
-    <div style="font-size:13px;color:#999;margin-bottom:16px;" id="noteDate"></div>
-    <textarea id="noteContent" placeholder="Note" style="width:100%;border:none;font-size:17px;background:#000;color:#fff;resize:none;outline:none;min-height:calc(100vh - 250px);font-family:var(--sf);"></textarea>
-  </div>
-  
-  <!-- System Navigation Bar -->
-  <div style="position:fixed;bottom:0;left:0;right:0;height:50px;background:#000;display:flex;justify-content:center;align-items:center;padding:0 20px;padding-bottom:env(safe-area-inset-bottom,10px);border-top:1px solid #333;">
-    <div style="width:60px;height:6px;background:#fff;border-radius:3px;cursor:pointer;" onclick="closeNoteEditor();goHome()"></div>
-  </div>
-</div>
-
-<div id="calculator" class="window">
-<div class="header" style="background:rgba(18,18,20,0.92);border-bottom:1px solid rgba(255,255,255,0.06);">
-  <div class="title" style="flex:1;text-align:center;">Calculator</div>
-</div>
-<div id="calcDisplay" style="font-size:72px;font-weight:300;text-align:right;padding:20px 24px;min-height:120px;background:linear-gradient(to bottom, #000, #111);">0</div>
-<div class="calc-grid" style="padding-bottom:80px;">
-<button class="gray" onclick="clearCalc()">AC</button>
-<button class="gray" onclick="toggleSign()">±</button>
-<button class="gray" onclick="percent()">%</button>
-<button class="orange" onclick="setOp('/')">÷</button>
-<button class="dark" onclick="num(7)">7</button>
-<button class="dark" onclick="num(8)">8</button>
-<button class="dark" onclick="num(9)">9</button>
-<button class="orange" onclick="setOp('*')">×</button>
-<button class="dark" onclick="num(4)">4</button>
-<button class="dark" onclick="num(5)">5</button>
-<button class="dark" onclick="num(6)">6</button>
-<button class="orange" onclick="setOp('-')">−</button>
-<button class="dark" onclick="num(1)">1</button>
-<button class="dark" onclick="num(2)">2</button>
-<button class="dark" onclick="num(3)">3</button>
-<button class="orange" onclick="setOp('+')">+</button>
-<button class="dark wide" onclick="num(0)">0</button>
-<button class="dark" onclick="dot()">.</button>
-<button class="orange" onclick="equals()">=</button>
-</div>
-<!-- System Navigation Bar -->
-<div style="position:fixed;bottom:0;left:0;right:0;height:50px;background:#000;display:flex;justify-content:center;align-items:center;padding:0 20px;padding-bottom:env(safe-area-inset-bottom,10px);border-top:1px solid #333;">
-  <div style="width:60px;height:6px;background:#fff;border-radius:3px;cursor:pointer;" onclick="goHome()"></div>
-</div>
-
-<!-- System Navigation Bar -->
-<div style="position:fixed;bottom:0;left:0;right:0;height:50px;background:#000;display:flex;justify-content:space-between;align-items:center;padding:0 20px;padding-bottom:env(safe-area-inset-bottom,10px);border-top:1px solid #333;z-index:100;">
-  <div style="width:60px;height:6px;background:#fff;border-radius:3px;cursor:pointer;" onclick="goHome()"></div>
-</div>
-</div>
-
-<div id="browser" class="window">
-<div class="header" style="background:rgba(18,18,20,0.92);border-bottom:1px solid rgba(255,255,255,0.06);">
-  <div class="title" style="flex:1;text-align:center;">Safari</div>
-</div>
-<div style="padding:15px;padding-bottom:80px;overflow-y:auto;height:calc(100vh - 150px);">
-<input id="browserUrl" placeholder="Enter URL">
-<button onclick="openBrowserUrl()">Go</button>
-<h3>Favorites</h3>
-<input id="favUrl" placeholder="Add favorite URL">
-<button onclick="addFavorite()">Add Favorite</button>
-<div id="favorites"></div>
-</div>
-<!-- System Navigation Bar -->
-<div style="position:fixed;bottom:0;left:0;right:0;height:50px;background:#000;display:flex;justify-content:center;align-items:center;padding:0 20px;padding-bottom:env(safe-area-inset-bottom,10px);border-top:1px solid #333;">
-  <div style="width:60px;height:6px;background:#fff;border-radius:3px;cursor:pointer;" onclick="goHome()"></div>
-</div>
-</div>
-
-<div id="settings" class="window">
-<div class="header" style="background:rgba(18,18,20,0.92);border-bottom:1px solid rgba(255,255,255,0.06);">
-  <div class="title" style="flex:1;text-align:center;">Settings</div>
-</div>
-<div style="padding:15px;padding-bottom:80px;overflow-y:auto;height:calc(100vh - 150px);">
-<h3>Wallpaper</h3>
-<input type="file" accept="image/*" onchange="setWallpaper(event)" id="wallpaperInput">
-<h3 style="margin-top:30px">Add Web App</h3>
-<input id="webappName" placeholder="App Name" style="margin-bottom:8px">
-<input id="webappUrl" placeholder="https://youtube.com" style="margin-bottom:8px">
-<input id="webappIcon" type="file" accept="image/*" style="margin-bottom:8px">
-<button onclick="addCustomWebApp()">Add to Home Screen</button>
-</div>
-<!-- System Navigation Bar -->
-<div style="position:fixed;bottom:0;left:0;right:0;height:50px;background:#000;display:flex;justify-content:center;align-items:center;padding:0 20px;padding-bottom:env(safe-area-inset-bottom,10px);border-top:1px solid #333;">
-  <div style="width:60px;height:6px;background:#fff;border-radius:3px;cursor:pointer;" onclick="goHome()"></div>
-</div>
-</div>
-
 <script>
-// ─── DEVICE ─────────────────────────────────
-let deviceMode = localStorage.getItem('deviceMode');
-let dockLimit = 4;
+let deviceMode = localStorage.getItem('deviceMode') || 'iphone';
+let dockLimit = deviceMode==='ipad'?6:4;
 
-if(!deviceMode) {
-  document.getElementById('deviceChooser').style.display='flex';
-}
+document.body.classList.add(deviceMode);
 
-function setDevice(mode){
-  localStorage.setItem('deviceMode',mode);
-  deviceMode=mode;
-  dockLimit = deviceMode==='ipad' ? 6 : 4;
-  document.getElementById('deviceChooser').style.display='none';
-  applyLayout();
-  render();
-  
-  // Save device preference
-  console.log('Device saved:', mode);
-}
-
-function applyLayout(){
-  document.body.classList.remove('iphone','ipad');
-  document.body.classList.add(deviceMode==='ipad'?'ipad':'iphone');
-  dockLimit = deviceMode==='ipad' ? 6 : 4;
-  
-  // Apply saved wallpaper
-  const savedWallpaper = localStorage.getItem('wallpaper');
-  if(savedWallpaper) {
-    document.getElementById('wallpaper').style.backgroundImage=`url(${savedWallpaper})`;
-  }
-}
-
-// ─── APPS ─────────────────────────────
-let apps=JSON.parse(localStorage.getItem('apps'))||[
+let apps = JSON.parse(localStorage.getItem('apps')) || [
   {name:"Notes",id:"notes",icon:"https://i.imgur.com/9D6V4Xx.png",isCustom:false,dock:true},
-  {name:"Calculator",id:"calculator",icon:"https://i.imgur.com/7Qh5aIX.png",isCustom:false,dock:true},
   {name:"Browser",id:"browser",icon:"https://i.imgur.com/XV3Txqf.png",isCustom:false,dock:false},
   {name:"Settings",id:"settings",icon:"https://i.imgur.com/crghH6U.png",isCustom:false,dock:false}
 ];
+
 let editMode=false;
-let pressTimer;
 const homeEl=document.getElementById('home');
 const dockEl=document.getElementById('dock');
 
-// ─── CREATE APP ELEMENT ───────────────
+function saveApps(){
+  localStorage.setItem('apps',JSON.stringify(apps));
+}
+
 function createAppEl(app){
   const el=document.createElement('div');
   el.className='app';
-  if(app.isCustom) el.classList.add('is-custom');
+  if(app.isCustom)el.classList.add('is-custom');
   el.draggable=true;
   el.dataset.id=app.id||app.url||app.name;
-  el.innerHTML=`<img src="${app.icon}"><center><span>${app.name}</span></center>`;
+  el.innerHTML=`<img src="${app.icon}"><span>${app.name}</span>`;
+
   if(app.isCustom){
     const x=document.createElement('div');
     x.className='delete-x';
     x.textContent='×';
-    x.onclick=e=>{e.stopPropagation();if(confirm(`Delete "${app.name}"?`)){apps=apps.filter(a=>a!==app);saveApps();render();}};
+    x.onclick=e=>{
+      e.stopPropagation();
+      if(!confirm(`Delete "${app.name}"?`))return;
+      apps=apps.filter(a=>
+        (a.id||a.url||a.name)!==(app.id||app.url||app.name)
+      );
+      saveApps();
+      render();
+    };
     el.appendChild(x);
   }
-  el.onclick=()=>{if(editMode) return;if(app.id) openApp(app.id); else if(app.url) window.open(app.url,'_blank');};
-  const start=()=>pressTimer=setTimeout(()=>enterEditMode(),500);
-  const cancel=()=>clearTimeout(pressTimer);
-  ['mousedown','touchstart'].forEach(evt=>el.addEventListener(evt,start));
-  ['mouseup','mouseleave','touchend','touchcancel'].forEach(evt=>el.addEventListener(evt,cancel));
-  el.addEventListener('dragstart',e=>{if(!editMode){e.preventDefault();return;}e.dataTransfer.setData('text/plain',el.dataset.id);el.classList.add('dragging');});
-  el.addEventListener('dragend',()=>{el.classList.remove('dragging'); saveApps();});
+
+  el.onclick=()=>{
+    if(editMode)return;
+    if(app.url)window.open(app.url,'_blank');
+  };
+
+  el.addEventListener('dragstart',e=>{
+    if(!editMode){e.preventDefault();return;}
+    el.classList.add('dragging');
+  });
+
+  el.addEventListener('dragend',()=>{
+    el.classList.remove('dragging');
+    saveApps();
+  });
+
   return el;
 }
 
-// ─── RENDER ─────────────────────────────
 function render(){
-  console.log('Rendering apps. Total apps:', apps.length);
-  renderDock();
-  renderPages();
-  renderFavorites();
-}
-function renderDock(){
   dockEl.innerHTML='';
-  const dockApps=apps.filter(a=>a.dock).slice(0,dockLimit);
-  console.log('Rendering dock with', dockApps.length, 'apps');
-  dockApps.forEach(a=>dockEl.appendChild(createAppEl(a)));
-}
-function renderPages(){
   homeEl.innerHTML='';
+
+  const dockApps=apps.filter(a=>a.dock).slice(0,dockLimit);
+  dockApps.forEach(a=>dockEl.appendChild(createAppEl(a)));
+
   const homeApps=apps.filter(a=>!a.dock);
-  console.log('Rendering pages with', homeApps.length, 'home apps');
-  const cols=deviceMode==='ipad'?6:4;
-  const gap=deviceMode==='ipad'?'28px':'22px';
-  const maxPerPage=cols*5;
-  const numPages=Math.max(1,Math.ceil(homeApps.length/maxPerPage));
-  for(let p=0;p<numPages;p++){
-    const page=document.createElement('div');
-    page.className='page';
-    page.style.setProperty('--cols',cols);
-    page.style.setProperty('--gap',gap);
-    homeApps.slice(p*maxPerPage,(p+1)*maxPerPage).forEach(a=>page.appendChild(createAppEl(a)));
-    homeEl.appendChild(page);
-    setupDrop(page,false);
-  }
-  setupDrop(dockEl,true);
-  createPageDots(numPages);
+  const page=document.createElement('div');
+  page.className='page';
+  page.style.setProperty('--cols',4);
+  page.style.setProperty('--gap','22px');
+  homeApps.forEach(a=>page.appendChild(createAppEl(a)));
+  homeEl.appendChild(page);
 }
 
-// ─── PAGE DOTS ─────────────────────────
-function createPageDots(num){
-  const container=document.getElementById('pageDots');
-  container.innerHTML='';
-  for(let i=0;i<num;i++){
-    const dot=document.createElement('div');
-    dot.className='dot';
-    if(i===0) dot.classList.add('active');
-    dot.onclick=()=>homeEl.children[i]?.scrollIntoView({behavior:'smooth'});
-    container.appendChild(dot);
-  }
+function enterEditMode(){
+  editMode=true;
+  document.body.classList.add('edit-mode');
+  document.getElementById('done').style.display='block';
 }
-homeEl.addEventListener('scroll',()=>{
-  const pageWidth=homeEl.offsetWidth;
-  const current=Math.round(homeEl.scrollLeft/pageWidth);
-  document.querySelectorAll('.dot').forEach((dot,i)=>dot.classList.toggle('active',i===current));
-});
+function exitEditMode(){
+  editMode=false;
+  document.body.classList.remove('edit-mode');
+  document.getElementById('done').style.display='none';
+  saveApps();
+  render();
+}
 
-// ─── DRAG HELPERS ──────────────────────
-function getAfterElement(container,pos,horizontal){
-  const items=Array.from(container.children).filter(c=>!c.classList.contains('dragging'));
-  return items.reduce((closest,child)=>{
-    const box=child.getBoundingClientRect();
-    const offset=horizontal?pos-box.left-box.width/2:pos-box.top-box.height/2;
-    return (offset<0&&offset>closest.offset)?{offset,element:child}:closest;
-  },{offset:Number.NEGATIVE_INFINITY}).element;
-}
-function setupDrop(container,isDock){
-  container.addEventListener('dragover',e=>e.preventDefault());
-  container.addEventListener('drop',e=>{
-    e.preventDefault();
-    const dragging=document.querySelector('.dragging');
-    if(!dragging) return;
-    const app=apps.find(a=>(a.id||a.url||a.name)===dragging.dataset.id);
-    if(!app) return;
-    if(isDock && apps.filter(a=>a.dock).length>=dockLimit && !app.dock) return;
-    app.dock=isDock;
-    saveApps();
-    render();
+function addCustomWebApp(name,url,iconData){
+  if(!url.startsWith('http://')&&!url.startsWith('https://')){
+    url='https://'+url;
+  }
+  apps.push({
+    name:name,
+    url:url,
+    icon:iconData,
+    isCustom:true,
+    dock:false
   });
+  saveApps();
+  render();
+  alert('Added to Home Screen');
 }
 
-// ─── EDIT MODE ─────────────────────────
-function enterEditMode(){editMode=true;document.body.classList.add('edit-mode');document.getElementById('done').style.display='block';}
-function exitEditMode(){editMode=false;document.body.classList.remove('edit-mode');document.getElementById('done').style.display='none';saveApps();render();}
-function saveApps(){
-  localStorage.setItem('apps',JSON.stringify(apps));
-  console.log('Apps saved to localStorage:', apps.length, 'apps');
+const savedWallpaper=localStorage.getItem('wallpaper');
+if(savedWallpaper){
+  document.getElementById('wallpaper').style.backgroundImage=`url(${savedWallpaper})`;
 }
 
-// ─── WINDOWS ───────────────────────────
-function openApp(id){
-  document.querySelectorAll('.window').forEach(w=>w.style.display='none');
-  const el=document.getElementById(id);
-  if(el)el.style.display='flex';
-}
-
-function goHome(){
-  document.querySelectorAll('.window').forEach(w=>w.style.display='none');
-}
-
-// ─── NOTES ─────────────────────────────
-let notes = JSON.parse(localStorage.getItem('notes') || '[]');
-let currentNoteId = null;
-
-function renderNotesList() {
-  const list = document.getElementById('notesList');
-  list.innerHTML = '';
-  
-  const sortedNotes = [...notes].sort((a, b) => b.edited - a.edited);
-  
-  sortedNotes.forEach(note => {
-    const div = document.createElement('div');
-    div.style.cssText = 'padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;';
-    div.onclick = () => openNoteEditor(note.id);
-    
-    const title = note.title || 'New Note';
-    const preview = note.content.substring(0, 60);
-    const date = new Date(note.edited).toLocaleString('en-US', { 
-      month: 'numeric', day: 'numeric', year: '2-digit',
-      hour: 'numeric', minute: '2-digit', hour12: true 
-    });
-    
-    div.innerHTML = `
-      <div style="font-size:17px;font-weight:500;color:#fff;margin-bottom:4px;">${title}</div>
-      <div style="font-size:15px;color:#888;">
-        <span>${date}</span>
-        <span style="margin:0 6px;">•</span>
-        <span>${preview}</span>
-      </div>
-    `;
-    list.appendChild(div);
-  });
-  
-  document.getElementById('notesCount').textContent = `${notes.length} Note${notes.length !== 1 ? 's' : ''}`;
-}
-
-function createNewNote() {
-  const note = {
-    id: Date.now(),
-    title: '',
-    content: '',
-    created: Date.now(),
-    edited: Date.now()
-  };
-  notes.unshift(note);
-  saveNotes();
-  openNoteEditor(note.id);
-}
-
-function openNoteEditor(noteId) {
-  currentNoteId = noteId;
-  const note = notes.find(n => n.id === noteId);
-  if (!note) return;
-  
-  document.getElementById('noteTitle').value = note.title;
-  document.getElementById('noteContent').value = note.content;
-  updateNoteDate();
-  
-  document.getElementById('notes').style.display = 'none';
-  document.getElementById('noteEditor').style.display = 'flex';
-}
-
-function closeNoteEditor() {
-  saveCurrentNote();
-  document.getElementById('noteEditor').style.display = 'none';
-  document.getElementById('notes').style.display = 'flex';
-  renderNotesList();
-}
-
-function saveCurrentNote() {
-  if (!currentNoteId) return;
-  const note = notes.find(n => n.id === currentNoteId);
-  if (!note) return;
-  
-  note.title = document.getElementById('noteTitle').value.trim();
-  note.content = document.getElementById('noteContent').value;
-  note.edited = Date.now();
-  
-  saveNotes();
-}
-
-function deleteCurrentNote() {
-  console.log('Delete button clicked, currentNoteId:', currentNoteId);
-  
-  if (!currentNoteId) {
-    alert('No note selected');
-    return;
-  }
-  
-  const note = notes.find(n => n.id === currentNoteId);
-  console.log('Note to delete:', note);
-  
-  const noteName = note?.title || 'this note';
-  
-  const confirmDelete = confirm(`Delete "${noteName}"?`);
-  console.log('User confirmed delete:', confirmDelete);
-  
-  if (!confirmDelete) return;
-  
-  notes = notes.filter(n => n.id !== currentNoteId);
-  currentNoteId = null;
-  saveNotes();
-  
-  console.log('Note deleted, remaining notes:', notes.length);
-  
-  // Close editor and go back to notes list
-  document.getElementById('noteEditor').style.display = 'none';
-  document.getElementById('notes').style.display = 'flex';
-  renderNotesList();
-}
-
-function updateNoteDate() {
-  const note = notes.find(n => n.id === currentNoteId);
-  if (!note) return;
-  const date = new Date(note.edited).toLocaleString('en-US', { 
-    month: 'long', day: 'numeric', year: 'numeric',
-    hour: 'numeric', minute: '2-digit', hour12: true 
-  });
-  document.getElementById('noteDate').textContent = date;
-}
-
-function saveNotes() {
-  localStorage.setItem('notes', JSON.stringify(notes));
-}
-
-// Auto-save while typing
-setTimeout(() => {
-  const titleEl = document.getElementById('noteTitle');
-  const contentEl = document.getElementById('noteContent');
-  if (titleEl) titleEl.addEventListener('input', saveCurrentNote);
-  if (contentEl) contentEl.addEventListener('input', saveCurrentNote);
-  
-  // Search functionality
-  const searchEl = document.getElementById('notesSearch');
-  if (searchEl) {
-    searchEl.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
-      const items = document.querySelectorAll('#notesList > div');
-      items.forEach(item => {
-        const text = item.textContent.toLowerCase();
-        item.style.display = text.includes(query) ? 'block' : 'none';
-      });
-    });
-  }
-}, 100);
-
-renderNotesList();
-
-
-// ─── CALCULATOR ────────────────────────
-let current='0',operator=null,stored=null;
-const disp=document.getElementById('calcDisplay');
-function update(){disp.textContent=current;}
-function num(n){current=current==='0'?''+n:current+n;update();}
-function dot(){if(!current.includes('.')) current+='.';update();}
-function clearCalc(){current='0';stored=null;operator=null;update();}
-function toggleSign(){current=''+(-parseFloat(current));update();}
-function percent(){current=''+(parseFloat(current)/100);update();}
-function setOp(op){stored=parseFloat(current);operator=op;current='0';}
-function equals(){const a=stored,b=parseFloat(current);if(operator==='+')current=''+(a+b);if(operator==='-')current=''+(a-b);if(operator==='*')current=''+(a*b);if(operator==='/')current=b?''+(a/b):'0';update();}
-
-// ─── BROWSER FAVORITES ─────────────────
-let favorites=JSON.parse(localStorage.getItem('favorites')||'[]');
-function renderFavorites(){
-  const list=document.getElementById('favorites');
-  if(!list) return;
-  list.innerHTML='';
-  favorites.forEach(url=>{
-    const d=document.createElement('div');
-    d.className='favorite';
-    d.textContent=url;
-    d.onclick=()=>window.open(url.startsWith('http')?url:'https://'+url,'_blank');
-    list.appendChild(d);
-  });
-}
-function addFavorite(){
-  const url=document.getElementById('favUrl').value.trim();
-  if(!url)return;
-  favorites.push(url.startsWith('http')?url:'https://'+url);
-  localStorage.setItem('favorites',JSON.stringify(favorites));
-  document.getElementById('favUrl').value='';
-  renderFavorites();
-}
-function openBrowserUrl(){
-  const url=document.getElementById('browserUrl').value.trim();
-  if(!url)return;
-  window.open(url.startsWith('http')?url:'https://'+url,'_blank');
-}
-renderFavorites();
-
-// ─── CUSTOM WEB APP ───────────────────
-function addCustomWebApp(){
-  console.log('Add Custom Web App clicked');
-  
-  const name = document.getElementById('webappName').value.trim();
-  const url = document.getElementById('webappUrl').value.trim();
-  const iconFile = document.getElementById('webappIcon').files[0];
-  
-  console.log('Name:', name, 'URL:', url, 'Icon:', iconFile);
-  
-  if(!name || !url || !iconFile) {
-    alert('Please fill all fields (Name, URL, and Icon)');
-    return;
-  }
-  
-  const reader = new FileReader();
-  reader.onload = e => {
-    console.log('Icon loaded, adding app...');
-    
-    apps.push({
-      name: name,
-      url: url,
-      icon: e.target.result,
-      isCustom: true,
-      dock: false
-    });
-    
-    console.log('App added to apps array:', apps.length, 'apps total');
-    
-    saveApps();
-    render();
-    
-    // Clear inputs after successful add
-    document.getElementById('webappName').value = '';
-    document.getElementById('webappUrl').value = '';
-    document.getElementById('webappIcon').value = '';
-    
-    console.log('Inputs cleared, going home');
-    goHome();
-  };
-  
-  reader.onerror = error => {
-    console.error('Error reading icon file:', error);
-    alert('Error reading icon file');
-  };
-  
-  reader.readAsDataURL(iconFile);
-}
-
-// ─── WALLPAPER ───────────────────────
-function setWallpaper(input) {
-  console.log('setWallpaper called with:', input);
-  
-  // Handle both event and element
-  let file;
-  if (input.target && input.target.files) {
-    // It's an event
-    file = input.target.files[0];
-  } else if (input.files) {
-    // It's a file input element
-    file = input.files[0];
-  }
-  
-  if(!file) {
-    console.log('No file selected');
-    return;
-  }
-  
-  console.log('File selected:', file.name);
-  
-  const reader = new FileReader();
-  reader.onload = e => {
-    const wallpaperEl = document.getElementById('wallpaper');
-    const imageData = e.target.result;
-    wallpaperEl.style.backgroundImage = `url(${imageData})`;
-    localStorage.setItem('wallpaper', imageData);
-    console.log('Wallpaper saved to localStorage');
-  };
-  reader.readAsDataURL(file);
-}
-
-// Load wallpaper on startup
-const savedWallpaper = localStorage.getItem('wallpaper');
-if(savedWallpaper) {
-  document.getElementById('wallpaper').style.backgroundImage = `url(${savedWallpaper})`;
-  console.log('Wallpaper loaded from localStorage');
-}
-
-if(deviceMode) {
-  applyLayout();
-} else {
-  // Still apply wallpaper even if device not chosen yet
-  const savedWallpaper = localStorage.getItem('wallpaper');
-  if(savedWallpaper) {
-    document.getElementById('wallpaper').style.backgroundImage=`url(${savedWallpaper})`;
-  }
-}
 render();
-
-console.log('App initialized. Device:', deviceMode, 'Wallpaper saved:', !!localStorage.getItem('wallpaper'));
-console.log('Functions available:', {
-  addCustomWebApp: typeof addCustomWebApp,
-  setWallpaper: typeof setWallpaper,
-  deleteCurrentNote: typeof deleteCurrentNote
-});
 </script>
 </body>
 </html>
