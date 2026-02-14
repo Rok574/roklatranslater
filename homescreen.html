@@ -349,19 +349,23 @@ function exitEditMode() {
 
 function syncOrder() {
   const newApps = [];
+
   Array.from(dock.children).forEach(el => {
     const found = apps.find(a => (a.id || a.url || a.name) === el.dataset.id);
     if (found) newApps.push(found);
   });
+
   Array.from(home.children).forEach(page => {
     Array.from(page.children).forEach(el => {
       const found = apps.find(a => (a.id || a.url || a.name) === el.dataset.id);
-      if (found) newApps.push(found);
+      if (found && !newApps.includes(found)) newApps.push(found);
     });
   });
+
   apps = newApps;
   localStorage.setItem("apps", JSON.stringify(apps));
 }
+
 
 // ─── WINDOWS & FEATURES ─────────────────────────────────────
 function openApp(id) { document.querySelectorAll(".window").forEach(w=>w.style.display="none"); document.getElementById(id).style.display="flex"; }
