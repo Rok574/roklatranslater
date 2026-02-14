@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>iOS Web Home</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
+
+<style>
+* { box-sizing: border-box; user-select: none; }
+body {
+  margin: 0;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: black;
+  overflow: hidden;
+}
+
+/* Wallpaper */
+#wallpaper {
+  position: fixed;
+  inset: 0;
+  background: url("https://images.apple.com/v/ios/home/images/overview/hero/hero_static__f5k0zvib8o2u_large.jpg")
+              center / cover no-repeat;
+  z-index: 0;
+}
+
+/* Home grid */
+#home {
+  position: relative;
+  z-index: 1;
+  padding: 30px 20px 140px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+}
+
+/* App icon */
+.app {
+  text-align: center;
+  color: white;
+}
+.app img {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+.app span {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+/* Dock */
+#dock {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  padding: 14px;
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(20px);
+  border-radius: 28px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  z-index: 2;
+}
+
+/* App windows */
+.window {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  color: white;
+  display: none;
+  flex-direction: column;
+  z-index: 10;
+}
+
+.header {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  background: #111;
+  border-bottom: 1px solid #222;
+}
+
+.back {
+  font-size: 18px;
+}
+
+.title {
+  margin-left: 10px;
+  font-weight: 600;
+}
+
+/* Inputs */
+textarea, input {
+  width: 100%;
+  background: #111;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 16px;
+}
+
+button {
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: #007aff;
+  color: white;
+  font-size: 16px;
+  margin-top: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="wallpaper"></div>
+
+<div id="home"></div>
+
+<div id="dock"></div>
+
+<!-- NOTES -->
+<div id="notes" class="window">
+  <div class="header">
+    <div class="back" onclick="goHome()">‹ Home</div>
+    <div class="title">Notes</div>
+  </div>
+  <textarea id="notesText" style="flex:1;"></textarea>
+</div>
+
+<!-- CALCULATOR -->
+<div id="calculator" class="window">
+  <div class="header">
+    <div class="back" onclick="goHome()">‹ Home</div>
+    <div class="title">Calculator</div>
+  </div>
+  <div style="padding:15px;">
+    <input id="calcDisplay" readonly>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px;">
+      <button onclick="press('7')">7</button>
+      <button onclick="press('8')">8</button>
+      <button onclick="press('9')">9</button>
+      <button onclick="press('/')">÷</button>
+      <button onclick="press('4')">4</button>
+      <button onclick="press('5')">5</button>
+      <button onclick="press('6')">6</button>
+      <button onclick="press('*')">×</button>
+      <button onclick="press('1')">1</button>
+      <button onclick="press('2')">2</button>
+      <button onclick="press('3')">3</button>
+      <button onclick="press('-')">−</button>
+      <button onclick="press('0')">0</button>
+      <button onclick="press('.')">.</button>
+      <button onclick="calculate()">=</button>
+      <button onclick="press('+')">+</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="settings" class="window">
+  <div class="header">
+    <div class="back" onclick="goHome()">‹ Home</div>
+    <div class="title">Settings</div>
+  </div>
+  <div style="padding:15px;">
+    <h3>Wallpaper URL</h3>
+    <input id="wallInput">
+    <button onclick="setWallpaper()">Apply</button>
+
+    <h3>Add App</h3>
+    <input id="appName" placeholder="App name">
+    <input id="appUrl" placeholder="https://example.com">
+    <input id="appIcon" type="file" accept="image/*">
+    <button onclick="addApp()">Add</button>
+  </div>
+</div>
+
+<script>
+const home = document.getElementById("home");
+const dock = document.getElementById("dock");
+const wallpaper = document.getElementById("wallpaper");
+
+/* ---------- APPS ---------- */
+let apps = JSON.parse(localStorage.getItem("apps")) || [
+  { name:"Notes", type:"internal", id:"notes", icon:"https://img.icons8.com/ios-filled/100/ffffff/notes.png" },
+  { name:"Calc", type:"internal", id:"calculator", icon:"https://img.icons8.com/ios-filled/100/ffffff/calculator.png" },
+  { name:"Settings", type:"internal", id:"settings", icon:"https://img.icons8.com/ios-filled/100/ffffff/settings.png" }
+];
+
+function saveApps() {
+  localStorage.setItem("apps", JSON.stringify(apps));
+}
+
+function render() {
+  home.innerHTML = "";
+  apps.forEach((app, i) => {
+    const el = document.createElement("div");
+    el.className = "app";
+    el.draggable = true;
+    el.innerHTML = `<img src="${app.icon}"><span>${app.name}</span>`;
+    el.onclick = () => openApp(app);
+    el.ondragstart = e => e.dataTransfer.setData("i", i);
+    el.ondragover = e => e.preventDefault();
+    el.ondrop = e => {
+      const from = e.dataTransfer.getData("i");
+      apps.splice(i, 0, apps.splice(from, 1)[0]);
+      saveApps();
+      render();
+    };
+    home.appendChild(el);
+  });
+}
+
+function openApp(app) {
+  if (app.type === "internal") {
+    document.getElementById(app.id).style.display = "flex";
+  } else {
+    window.location.href = app.url;
+  }
+}
+
+function goHome() {
+  document.querySelectorAll(".window").forEach(w => w.style.display = "none");
+}
+
+/* ---------- NOTES ---------- */
+const notes = document.getElementById("notesText");
+notes.value = localStorage.getItem("notes") || "";
+notes.oninput = () => localStorage.setItem("notes", notes.value);
+
+/* ---------- CALCULATOR ---------- */
+const display = document.getElementById("calcDisplay");
+function press(v){ display.value += v; }
+function calculate(){
+  try { display.value = Function("return "+display.value)(); }
+  catch { display.value = "Error"; }
+}
+
+/* ---------- SETTINGS ---------- */
+function setWallpaper(){
+  wallpaper.style.backgroundImage = `url(${wallInput.value})`;
+}
+
+function addApp(){
+  const file = appIcon.files[0];
+  if (!file) return alert("Pick an icon");
+  const r = new FileReader();
+  r.onload = () => {
+    apps.push({
+      name: appName.value,
+      type: "web",
+      url: appUrl.value,
+      icon: r.result
+    });
+    saveApps();
+    render();
+  };
+  r.readAsDataURL(file);
+}
+
+/* ---------- INIT ---------- */
+render();
+</script>
+
+</body>
+</html>
