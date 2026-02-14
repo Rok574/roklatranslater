@@ -10,35 +10,19 @@
 body { margin:0; font-family:'SF Pro Display',-apple-system,sans-serif; background:black; overflow:hidden; }
 #wallpaper { position:fixed; inset:0; background:#000 center/cover no-repeat; z-index:0; }
 
-/* ── iPhone layout ───────────────────────────────────── */
-body.iphone #home {
-  padding:30px 20px 140px;
-  grid-template-columns: repeat(4, 1fr);
-  gap:22px;
-}
-body.iphone #dock {
-  width:min(420px, calc(100% - 40px));
-  padding:14px 20px;
-  gap:24px;
-}
+/* iPhone layout */
+body.iphone #home { padding:30px 20px 140px; grid-template-columns: repeat(4, 1fr); gap:22px; }
+body.iphone #dock { width:min(420px, calc(100% - 40px)); padding:14px 20px; gap:24px; }
 body.iphone .app img { width:64px; height:64px; border-radius:14px; }
 body.iphone .app span { font-size:12px; margin-top:6px; }
 
-/* ── iPad layout ─────────────────────────────────────── */
-body.ipad #home {
-  padding:40px 30px 160px;
-  grid-template-columns: repeat(6, 1fr);
-  gap:28px;
-}
-body.ipad #dock {
-  width:min(620px, calc(100% - 48px));
-  padding:18px 28px;
-  gap:32px;
-}
+/* iPad layout */
+body.ipad #home { padding:40px 30px 160px; grid-template-columns: repeat(6, 1fr); gap:28px; }
+body.ipad #dock { width:min(620px, calc(100% - 48px)); padding:18px 28px; gap:32px; }
 body.ipad .app img { width:72px; height:72px; border-radius:18px; }
 body.ipad .app span { font-size:13px; margin-top:8px; }
 
-/* Shared styles */
+/* Shared */
 #home { position:relative; display:grid; z-index:1; }
 #dock {
   position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
@@ -74,7 +58,7 @@ button { padding:12px; border-radius:12px; border:none; background:#007aff; colo
 .wide { grid-column:span 2; border-radius:40px; }
 .favorite { padding:12px; border-bottom:1px solid #222; word-break:break-all; cursor:pointer; }
 
-/* Device chooser */
+/* Chooser */
 #deviceChooser {
   position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:999;
   display:none; flex-direction:column; align-items:center; justify-content:center; color:white; gap:40px;
@@ -100,7 +84,7 @@ button { padding:12px; border-radius:12px; border:none; background:#007aff; colo
   </div>
 </div>
 
-<!-- WINDOWS -->
+<!-- WINDOWS (same as before) -->
 <div id="notes" class="window">
   <div class="header"><div class="back" onclick="goHome()">‹ Home</div><div class="title">Notes</div></div>
   <textarea id="notesText" style="flex:1;"></textarea>
@@ -149,7 +133,6 @@ button { padding:12px; border-radius:12px; border:none; background:#007aff; colo
   <div style="padding:15px;">
     <h3>Wallpaper</h3>
     <input type="file" accept="image/*" onchange="setWallpaper(this)">
-    
     <h3 style="margin-top:30px;">Add Web App</h3>
     <input id="webappName" placeholder="App Name" style="margin-bottom:8px;">
     <input id="webappUrl" placeholder="https://youtube.com" style="margin-bottom:8px;">
@@ -159,12 +142,9 @@ button { padding:12px; border-radius:12px; border:none; background:#007aff; colo
 </div>
 
 <script>
-// ─── DEVICE MODE ─────────────────────────────────────────────
+// ─── DEVICE ─────────────────────────────────────────────────
 let deviceMode = localStorage.getItem('deviceMode');
-
-if (!deviceMode) {
-  document.getElementById('deviceChooser').style.display = 'flex';
-}
+if (!deviceMode) document.getElementById('deviceChooser').style.display = 'flex';
 
 function setDevice(mode) {
   localStorage.setItem('deviceMode', mode);
@@ -174,18 +154,17 @@ function setDevice(mode) {
   renderApps();
 }
 
-// ─── LAYOUT ──────────────────────────────────────────────────
 function applyLayout() {
-  document.body.classList.remove('iphone', 'ipad');
+  document.body.classList.remove('iphone','ipad');
   document.body.classList.add(deviceMode === 'ipad' ? 'ipad' : 'iphone');
 }
 
-// ─── APPS ────────────────────────────────────────────────────
+// ─── APPS ───────────────────────────────────────────────────
 let apps = JSON.parse(localStorage.getItem("apps")) || [
-  { name: "Notes", id: "notes", icon: "https://img.icons8.com/ios-filled/100/ffffff/notes.png", isCustom: false },
-  { name: "Calc", id: "calculator", icon: "https://img.icons8.com/ios-filled/100/ffffff/calculator.png", isCustom: false },
-  { name: "Browser", id: "browser", icon: "https://img.icons8.com/ios-filled/100/ffffff/safari.png", isCustom: false },
-  { name: "Settings", id: "settings", icon: "https://img.icons8.com/ios-filled/100/ffffff/settings.png", isCustom: false }
+  { name: "Notes", id: "notes", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRC4wjEB3rsNICYcrehZUz4hvDbHg4LhMh_Xw&s", isCustom: false },
+  { name: "Calculator", id: "calculator", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8Je98ZqXhgWmbiohpPpuBO2oNgajOWG3mHw&s", isCustom: false },
+  { name: "Chrome", id: "browser", icon: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/e6/16/cd/e616cd30-09be-220e-fc18-d1ffea0ab74e/Placeholder.mill/200x200bb-75.webp", isCustom: false },
+  { name: "Settings", id: "settings", icon: "https://i.imgur.com/crghH6U.png", isCustom: false }
 ];
 let editMode = false;
 let pressTimer;
@@ -215,7 +194,7 @@ function createAppEl(app) {
     else if (app.url) window.open(app.url, "_blank");
   };
 
-  const start = () => pressTimer = setTimeout(() => { enterEditMode(); }, 500);
+  const start = () => pressTimer = setTimeout(() => enterEditMode(), 500);
   const cancel = () => clearTimeout(pressTimer);
   el.addEventListener("mousedown", start);
   el.addEventListener("mouseup", cancel);
@@ -244,7 +223,7 @@ function renderApps() {
   });
 }
 
-// ─── EDIT / DRAG ─────────────────────────────────────────────
+// ─── EDIT MODE ──────────────────────────────────────────────
 function enterEditMode() {
   editMode = true;
   document.body.classList.add("edit-mode");
@@ -256,6 +235,7 @@ function exitEditMode() {
   document.getElementById("done").style.display = "none";
 }
 
+// ─── DRAG & DROP (with dock limit fix) ──────────────────────
 function getAfterElement(container, pos, horizontal) {
   const items = Array.from(container.children).filter(c => !c.classList.contains("dragging"));
   return items.reduce((closest, child) => {
@@ -265,14 +245,30 @@ function getAfterElement(container, pos, horizontal) {
   }, {offset: Number.NEGATIVE_INFINITY}).element;
 }
 
-[home, dock].forEach((container, isHoriz) => {
-  container.addEventListener("dragover", e => {
-    e.preventDefault();
-    const dragging = document.querySelector(".dragging");
-    if (!dragging) return;
-    const after = getAfterElement(container, isHoriz ? e.clientX : e.clientY, isHoriz);
-    container.insertBefore(dragging, after || null);
-  });
+// Home dragover (no limit)
+home.addEventListener("dragover", e => {
+  e.preventDefault();
+  const dragging = document.querySelector(".dragging");
+  if (!dragging) return;
+  const after = getAfterElement(home, e.clientY, false);
+  home.insertBefore(dragging, after || null);
+});
+
+// Dock dragover + auto-kick when full
+dock.addEventListener("dragover", e => {
+  e.preventDefault();
+  const dragging = document.querySelector(".dragging");
+  if (!dragging) return;
+
+  const maxDock = deviceMode === 'ipad' ? 6 : 4;
+  if (dock.children.length >= maxDock && !dock.contains(dragging)) {
+    // Push the rightmost dock app to home
+    const last = dock.lastElementChild;
+    if (last) home.appendChild(last);
+  }
+
+  const after = getAfterElement(dock, e.clientX, true);
+  dock.insertBefore(dragging, after || null);
 });
 
 function syncOrder() {
@@ -289,13 +285,16 @@ function syncOrder() {
   localStorage.setItem("apps", JSON.stringify(apps));
 }
 
-// ─── WINDOWS & FEATURES (unchanged from your working code) ──
+// ─── WINDOWS & FEATURES (unchanged) ─────────────────────────
 function openApp(id) { document.querySelectorAll(".window").forEach(w=>w.style.display="none"); document.getElementById(id).style.display="flex"; }
 function goHome() { document.querySelectorAll(".window").forEach(w=>w.style.display="none"); }
 
-// Notes
-document.getElementById("notesText").value = localStorage.notes || "";
-document.getElementById("notesText").oninput = e => localStorage.notes = e.target.value;
+// Notes, Calculator, Browser, Custom apps, Wallpaper → exactly the same as last version
+// (I kept them short here for space, but they are identical to the previous full code)
+
+const notesText = document.getElementById("notesText");
+notesText.value = localStorage.notes || "";
+notesText.oninput = e => localStorage.notes = e.target.value;
 
 // Calculator
 let current = "0", operator = null, stored = null;
@@ -383,7 +382,7 @@ function setWallpaper(input) {
 }
 if (localStorage.wp) document.getElementById("wallpaper").style.backgroundImage = `url(${localStorage.wp})`;
 
-// ─── START ───────────────────────────────────────────────────
+// ─── START ──────────────────────────────────────────────────
 applyLayout();
 renderApps();
 </script>
