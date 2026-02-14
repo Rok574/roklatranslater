@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>iOS Home</title>
 <link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
 <style>
@@ -164,6 +164,13 @@ body.edit-mode .app{animation:wiggle 0.8s infinite}
       backdrop-filter: blur(10px);
       resize: none;
       box-sizing: border-box;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    
+    input[type="file"] {
+      padding: 8px;
+      font-size: 15px;
     }
 
     button {
@@ -240,9 +247,8 @@ body.edit-mode .app{animation:wiggle 0.8s infinite}
 
 <!-- WINDOWS -->
 <div id="notes" class="window">
-  <div class="header" style="background:#f7f7f7;color:#000;border-bottom:1px solid #e0e0e0;">
-    <div class="back" onclick="goHome()" style="color:#007aff;">‹ Home</div>
-    <div class="title" style="color:#000;flex:1;text-align:center;font-size:17px;">Notes</div>
+  <div class="header" style="background:rgba(18,18,20,0.92);color:#fff;border-bottom:1px solid rgba(255,255,255,0.06);">
+    <div class="title" style="color:#fff;flex:1;text-align:center;font-size:17px;font-weight:600;">Notes</div>
     <div style="color:#007aff;cursor:pointer;padding:8px;" onclick="createNewNote()">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M12 5v14M5 12h14"/>
@@ -250,12 +256,12 @@ body.edit-mode .app{animation:wiggle 0.8s infinite}
     </div>
   </div>
   
-  <div style="flex:1;background:#f7f7f7;overflow-y:auto;">
-    <div style="padding:16px 20px;background:#fff;border-bottom:1px solid #e0e0e0;">
-      <input id="notesSearch" placeholder="Search" style="background:#e5e5e5;border:none;border-radius:10px;padding:8px 12px;font-size:15px;width:100%;color:#000;" />
+  <div style="flex:1;background:#000;overflow-y:auto;padding-bottom:80px;">
+    <div style="padding:16px 20px;background:rgba(18,18,20,0.92);border-bottom:1px solid rgba(255,255,255,0.06);">
+      <input id="notesSearch" placeholder="Search" style="background:rgba(60,60,67,0.6);border:none;border-radius:10px;padding:8px 12px;font-size:15px;width:100%;color:#fff;" />
     </div>
     
-    <div style="padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e0e0e0;background:#fff;">
+    <div style="padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(18,18,20,0.92);">
       <div style="display:flex;align-items:center;gap:8px;">
         <div style="width:32px;height:32px;background:#ffc107;border-radius:6px;display:flex;align-items:center;justify-content:center;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2">
@@ -263,41 +269,53 @@ body.edit-mode .app{animation:wiggle 0.8s infinite}
             <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
           </svg>
         </div>
-        <span style="color:#ffc107;font-size:15px;font-weight:500;">Sort by Date Edited (Default)</span>
+        <span style="color:#ffc107;font-size:15px;font-weight:500;">Sort by Date Edited</span>
       </div>
       <span style="color:#ffc107;">›</span>
     </div>
     
-    <div id="notesList" style="background:#fff;"></div>
+    <div id="notesList" style="background:#000;"></div>
     
-    <div style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:#888;font-size:13px;background:#f7f7f7;padding:8px;">
+    <div style="padding:60px 20px 20px;text-align:center;color:#888;font-size:13px;background:#000;">
       <span id="notesCount">0 Notes</span>
     </div>
+  </div>
+  
+  <!-- System Navigation Bar -->
+  <div style="position:fixed;bottom:0;left:0;right:0;height:50px;background:#000;display:flex;justify-content:center;align-items:center;padding:0 20px;padding-bottom:env(safe-area-inset-bottom,10px);border-top:1px solid #333;">
+    <div style="width:60px;height:6px;background:#fff;border-radius:3px;cursor:pointer;" onclick="goHome()"></div>
   </div>
 </div>
 
 <div id="noteEditor" class="window">
-  <div class="header" style="background:#f7f7f7;color:#000;border-bottom:1px solid #e0e0e0;">
-    <div class="back" onclick="closeNoteEditor()" style="color:#007aff;">‹ Work</div>
+  <div class="header" style="background:rgba(18,18,20,0.92);color:#fff;border-bottom:1px solid rgba(255,255,255,0.06);">
+    <div class="back" onclick="closeNoteEditor()" style="color:#007aff;">‹ Notes</div>
     <div style="flex:1;"></div>
-    <div style="color:#007aff;cursor:pointer;padding:8px;" onclick="deleteCurrentNote()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <div onclick="deleteCurrentNote()" style="color:#007aff;cursor:pointer;padding:8px;display:flex;align-items:center;justify-content:center;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="pointer-events:none;">
         <polyline points="3 6 5 6 21 6"></polyline>
         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
       </svg>
     </div>
   </div>
-  <div style="flex:1;background:#fff;padding:20px;overflow-y:auto;">
-    <input id="noteTitle" placeholder="Title" style="width:100%;border:none;font-size:24px;font-weight:600;margin-bottom:8px;background:#fff;color:#000;outline:none;" />
+  <div style="flex:1;background:#000;padding:20px;overflow-y:auto;padding-bottom:80px;">
+    <input id="noteTitle" placeholder="Title" style="width:100%;border:none;font-size:24px;font-weight:600;margin-bottom:8px;background:#000;color:#fff;outline:none;" />
     <div style="font-size:13px;color:#999;margin-bottom:16px;" id="noteDate"></div>
-    <textarea id="noteContent" placeholder="Note" style="width:100%;border:none;font-size:17px;background:#fff;color:#000;resize:none;outline:none;flex:1;min-height:400px;"></textarea>
+    <textarea id="noteContent" placeholder="Note" style="width:100%;border:none;font-size:17px;background:#000;color:#fff;resize:none;outline:none;min-height:calc(100vh - 250px);font-family:var(--sf);"></textarea>
+  </div>
+  
+  <!-- System Navigation Bar -->
+  <div style="position:fixed;bottom:0;left:0;right:0;height:50px;background:#000;display:flex;justify-content:center;align-items:center;padding:0 20px;padding-bottom:env(safe-area-inset-bottom,10px);border-top:1px solid #333;">
+    <div style="width:60px;height:6px;background:#fff;border-radius:3px;cursor:pointer;" onclick="closeNoteEditor();goHome()"></div>
   </div>
 </div>
 
 <div id="calculator" class="window">
-<div class="header"><div class="back" onclick="goHome()">‹ Home</div><div class="title">Calculator</div></div>
+<div class="header" style="background:rgba(18,18,20,0.92);border-bottom:1px solid rgba(255,255,255,0.06);">
+  <div class="title" style="flex:1;text-align:center;">Calculator</div>
+</div>
 <div id="calcDisplay" style="font-size:72px;font-weight:300;text-align:right;padding:20px 24px;min-height:120px;background:linear-gradient(to bottom, #000, #111);">0</div>
-<div class="calc-grid">
+<div class="calc-grid" style="padding-bottom:80px;">
 <button class="gray" onclick="clearCalc()">AC</button>
 <button class="gray" onclick="toggleSign()">±</button>
 <button class="gray" onclick="percent()">%</button>
@@ -318,11 +336,22 @@ body.edit-mode .app{animation:wiggle 0.8s infinite}
 <button class="dark" onclick="dot()">.</button>
 <button class="orange" onclick="equals()">=</button>
 </div>
+<!-- System Navigation Bar -->
+<div style="position:fixed;bottom:0;left:0;right:0;height:50px;background:#000;display:flex;justify-content:center;align-items:center;padding:0 20px;padding-bottom:env(safe-area-inset-bottom,10px);border-top:1px solid #333;">
+  <div style="width:60px;height:6px;background:#fff;border-radius:3px;cursor:pointer;" onclick="goHome()"></div>
+</div>
+
+<!-- System Navigation Bar -->
+<div style="position:fixed;bottom:0;left:0;right:0;height:50px;background:#000;display:flex;justify-content:space-between;align-items:center;padding:0 20px;padding-bottom:env(safe-area-inset-bottom,10px);border-top:1px solid #333;z-index:100;">
+  <div style="width:60px;height:6px;background:#fff;border-radius:3px;cursor:pointer;" onclick="goHome()"></div>
+</div>
 </div>
 
 <div id="browser" class="window">
-<div class="header"><div class="back" onclick="goHome()">‹ Home</div><div class="title">Browser</div></div>
-<div style="padding:15px">
+<div class="header" style="background:rgba(18,18,20,0.92);border-bottom:1px solid rgba(255,255,255,0.06);">
+  <div class="title" style="flex:1;text-align:center;">Safari</div>
+</div>
+<div style="padding:15px;padding-bottom:80px;overflow-y:auto;height:calc(100vh - 150px);">
 <input id="browserUrl" placeholder="Enter URL">
 <button onclick="openBrowserUrl()">Go</button>
 <h3>Favorites</h3>
@@ -330,18 +359,28 @@ body.edit-mode .app{animation:wiggle 0.8s infinite}
 <button onclick="addFavorite()">Add Favorite</button>
 <div id="favorites"></div>
 </div>
+<!-- System Navigation Bar -->
+<div style="position:fixed;bottom:0;left:0;right:0;height:50px;background:#000;display:flex;justify-content:center;align-items:center;padding:0 20px;padding-bottom:env(safe-area-inset-bottom,10px);border-top:1px solid #333;">
+  <div style="width:60px;height:6px;background:#fff;border-radius:3px;cursor:pointer;" onclick="goHome()"></div>
+</div>
 </div>
 
 <div id="settings" class="window">
-<div class="header"><div class="back" onclick="goHome()">‹ Home</div><div class="title">Settings</div></div>
-<div style="padding:15px">
+<div class="header" style="background:rgba(18,18,20,0.92);border-bottom:1px solid rgba(255,255,255,0.06);">
+  <div class="title" style="flex:1;text-align:center;">Settings</div>
+</div>
+<div style="padding:15px;padding-bottom:80px;overflow-y:auto;height:calc(100vh - 150px);">
 <h3>Wallpaper</h3>
-<input type="file" accept="image/*" onchange="setWallpaper(this)">
+<input type="file" accept="image/*" onchange="setWallpaper(event)" id="wallpaperInput">
 <h3 style="margin-top:30px">Add Web App</h3>
 <input id="webappName" placeholder="App Name" style="margin-bottom:8px">
 <input id="webappUrl" placeholder="https://youtube.com" style="margin-bottom:8px">
 <input id="webappIcon" type="file" accept="image/*" style="margin-bottom:8px">
 <button onclick="addCustomWebApp()">Add to Home Screen</button>
+</div>
+<!-- System Navigation Bar -->
+<div style="position:fixed;bottom:0;left:0;right:0;height:50px;background:#000;display:flex;justify-content:center;align-items:center;padding:0 20px;padding-bottom:env(safe-area-inset-bottom,10px);border-top:1px solid #333;">
+  <div style="width:60px;height:6px;background:#fff;border-radius:3px;cursor:pointer;" onclick="goHome()"></div>
 </div>
 </div>
 
@@ -361,12 +400,21 @@ function setDevice(mode){
   document.getElementById('deviceChooser').style.display='none';
   applyLayout();
   render();
+  
+  // Save device preference
+  console.log('Device saved:', mode);
 }
 
 function applyLayout(){
   document.body.classList.remove('iphone','ipad');
   document.body.classList.add(deviceMode==='ipad'?'ipad':'iphone');
   dockLimit = deviceMode==='ipad' ? 6 : 4;
+  
+  // Apply saved wallpaper
+  const savedWallpaper = localStorage.getItem('wallpaper');
+  if(savedWallpaper) {
+    document.getElementById('wallpaper').style.backgroundImage=`url(${savedWallpaper})`;
+  }
 }
 
 // ─── APPS ─────────────────────────────
@@ -408,6 +456,7 @@ function createAppEl(app){
 
 // ─── RENDER ─────────────────────────────
 function render(){
+  console.log('Rendering apps. Total apps:', apps.length);
   renderDock();
   renderPages();
   renderFavorites();
@@ -415,11 +464,13 @@ function render(){
 function renderDock(){
   dockEl.innerHTML='';
   const dockApps=apps.filter(a=>a.dock).slice(0,dockLimit);
+  console.log('Rendering dock with', dockApps.length, 'apps');
   dockApps.forEach(a=>dockEl.appendChild(createAppEl(a)));
 }
 function renderPages(){
   homeEl.innerHTML='';
   const homeApps=apps.filter(a=>!a.dock);
+  console.log('Rendering pages with', homeApps.length, 'home apps');
   const cols=deviceMode==='ipad'?6:4;
   const gap=deviceMode==='ipad'?'28px':'22px';
   const maxPerPage=cols*5;
@@ -482,11 +533,21 @@ function setupDrop(container,isDock){
 // ─── EDIT MODE ─────────────────────────
 function enterEditMode(){editMode=true;document.body.classList.add('edit-mode');document.getElementById('done').style.display='block';}
 function exitEditMode(){editMode=false;document.body.classList.remove('edit-mode');document.getElementById('done').style.display='none';saveApps();render();}
-function saveApps(){localStorage.setItem('apps',JSON.stringify(apps));}
+function saveApps(){
+  localStorage.setItem('apps',JSON.stringify(apps));
+  console.log('Apps saved to localStorage:', apps.length, 'apps');
+}
 
 // ─── WINDOWS ───────────────────────────
-function openApp(id){document.querySelectorAll('.window').forEach(w=>w.style.display='none');const el=document.getElementById(id);if(el)el.style.display='flex';}
-function goHome(){document.querySelectorAll('.window').forEach(w=>w.style.display='none');}
+function openApp(id){
+  document.querySelectorAll('.window').forEach(w=>w.style.display='none');
+  const el=document.getElementById(id);
+  if(el)el.style.display='flex';
+}
+
+function goHome(){
+  document.querySelectorAll('.window').forEach(w=>w.style.display='none');
+}
 
 // ─── NOTES ─────────────────────────────
 let notes = JSON.parse(localStorage.getItem('notes') || '[]');
@@ -500,7 +561,7 @@ function renderNotesList() {
   
   sortedNotes.forEach(note => {
     const div = document.createElement('div');
-    div.style.cssText = 'padding:16px 20px;border-bottom:1px solid #e0e0e0;cursor:pointer;';
+    div.style.cssText = 'padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;';
     div.onclick = () => openNoteEditor(note.id);
     
     const title = note.title || 'New Note';
@@ -511,7 +572,7 @@ function renderNotesList() {
     });
     
     div.innerHTML = `
-      <div style="font-size:17px;font-weight:500;color:#000;margin-bottom:4px;">${title}</div>
+      <div style="font-size:17px;font-weight:500;color:#fff;margin-bottom:4px;">${title}</div>
       <div style="font-size:15px;color:#888;">
         <span>${date}</span>
         <span style="margin:0 6px;">•</span>
@@ -570,12 +631,33 @@ function saveCurrentNote() {
 }
 
 function deleteCurrentNote() {
-  if (!currentNoteId) return;
-  if (!confirm('Delete this note?')) return;
+  console.log('Delete button clicked, currentNoteId:', currentNoteId);
+  
+  if (!currentNoteId) {
+    alert('No note selected');
+    return;
+  }
+  
+  const note = notes.find(n => n.id === currentNoteId);
+  console.log('Note to delete:', note);
+  
+  const noteName = note?.title || 'this note';
+  
+  const confirmDelete = confirm(`Delete "${noteName}"?`);
+  console.log('User confirmed delete:', confirmDelete);
+  
+  if (!confirmDelete) return;
   
   notes = notes.filter(n => n.id !== currentNoteId);
+  currentNoteId = null;
   saveNotes();
-  closeNoteEditor();
+  
+  console.log('Note deleted, remaining notes:', notes.length);
+  
+  // Close editor and go back to notes list
+  document.getElementById('noteEditor').style.display = 'none';
+  document.getElementById('notes').style.display = 'flex';
+  renderNotesList();
 }
 
 function updateNoteDate() {
@@ -593,18 +675,25 @@ function saveNotes() {
 }
 
 // Auto-save while typing
-document.getElementById('noteTitle')?.addEventListener('input', saveCurrentNote);
-document.getElementById('noteContent')?.addEventListener('input', saveCurrentNote);
-
-// Search functionality
-document.getElementById('notesSearch')?.addEventListener('input', (e) => {
-  const query = e.target.value.toLowerCase();
-  const items = document.querySelectorAll('#notesList > div');
-  items.forEach(item => {
-    const text = item.textContent.toLowerCase();
-    item.style.display = text.includes(query) ? 'block' : 'none';
-  });
-});
+setTimeout(() => {
+  const titleEl = document.getElementById('noteTitle');
+  const contentEl = document.getElementById('noteContent');
+  if (titleEl) titleEl.addEventListener('input', saveCurrentNote);
+  if (contentEl) contentEl.addEventListener('input', saveCurrentNote);
+  
+  // Search functionality
+  const searchEl = document.getElementById('notesSearch');
+  if (searchEl) {
+    searchEl.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      const items = document.querySelectorAll('#notesList > div');
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(query) ? 'block' : 'none';
+      });
+    });
+  }
+}, 100);
 
 renderNotesList();
 
@@ -622,43 +711,139 @@ function setOp(op){stored=parseFloat(current);operator=op;current='0';}
 function equals(){const a=stored,b=parseFloat(current);if(operator==='+')current=''+(a+b);if(operator==='-')current=''+(a-b);if(operator==='*')current=''+(a*b);if(operator==='/')current=b?''+(a/b):'0';update();}
 
 // ─── BROWSER FAVORITES ─────────────────
-let favorites=JSON.parse(localStorage.favorites||'[]');
-function renderFavorites(){const list=document.getElementById('favorites');list.innerHTML='';favorites.forEach(url=>{const d=document.createElement('div');d.className='favorite';d.textContent=url;d.onclick=()=>window.open(url.startsWith('http')?url:'https://'+url,'_blank');list.appendChild(d);});}
-function addFavorite(){const url=document.getElementById('favUrl').value.trim();if(!url)return;favorites.push(url.startsWith('http')?url:'https://'+url);localStorage.favorites=JSON.stringify(favorites);document.getElementById('favUrl').value='';renderFavorites();}
-function openBrowserUrl(){const url=document.getElementById('browserUrl').value.trim();if(!url)return;window.open(url.startsWith('http')?url:'https://'+url,'_blank');}
+let favorites=JSON.parse(localStorage.getItem('favorites')||'[]');
+function renderFavorites(){
+  const list=document.getElementById('favorites');
+  if(!list) return;
+  list.innerHTML='';
+  favorites.forEach(url=>{
+    const d=document.createElement('div');
+    d.className='favorite';
+    d.textContent=url;
+    d.onclick=()=>window.open(url.startsWith('http')?url:'https://'+url,'_blank');
+    list.appendChild(d);
+  });
+}
+function addFavorite(){
+  const url=document.getElementById('favUrl').value.trim();
+  if(!url)return;
+  favorites.push(url.startsWith('http')?url:'https://'+url);
+  localStorage.setItem('favorites',JSON.stringify(favorites));
+  document.getElementById('favUrl').value='';
+  renderFavorites();
+}
+function openBrowserUrl(){
+  const url=document.getElementById('browserUrl').value.trim();
+  if(!url)return;
+  window.open(url.startsWith('http')?url:'https://'+url,'_blank');
+}
+renderFavorites();
 
 // ─── CUSTOM WEB APP ───────────────────
 function addCustomWebApp(){
-  const name=document.getElementById('webappName').value.trim();
-  const url=document.getElementById('webappUrl').value.trim();
-  const iconFile=document.getElementById('webappIcon').files[0];
-  if(!name||!url||!iconFile)return alert('Fill all fields');
-  const reader=new FileReader();
-  reader.onload=e=>{
-    apps.push({name:name,url:url,icon:e.target.result,isCustom:true,dock:false});
-    saveApps();render();
-    goHome();
+  console.log('Add Custom Web App clicked');
+  
+  const name = document.getElementById('webappName').value.trim();
+  const url = document.getElementById('webappUrl').value.trim();
+  const iconFile = document.getElementById('webappIcon').files[0];
+  
+  console.log('Name:', name, 'URL:', url, 'Icon:', iconFile);
+  
+  if(!name || !url || !iconFile) {
+    alert('Please fill all fields (Name, URL, and Icon)');
+    return;
   }
+  
+  const reader = new FileReader();
+  reader.onload = e => {
+    console.log('Icon loaded, adding app...');
+    
+    apps.push({
+      name: name,
+      url: url,
+      icon: e.target.result,
+      isCustom: true,
+      dock: false
+    });
+    
+    console.log('App added to apps array:', apps.length, 'apps total');
+    
+    saveApps();
+    render();
+    
+    // Clear inputs after successful add
+    document.getElementById('webappName').value = '';
+    document.getElementById('webappUrl').value = '';
+    document.getElementById('webappIcon').value = '';
+    
+    console.log('Inputs cleared, going home');
+    goHome();
+  };
+  
+  reader.onerror = error => {
+    console.error('Error reading icon file:', error);
+    alert('Error reading icon file');
+  };
+  
   reader.readAsDataURL(iconFile);
-  document.getElementById('webappName').value='';
-  document.getElementById('webappUrl').value='';
-  document.getElementById('webappIcon').value='';
 }
 
 // ─── WALLPAPER ───────────────────────
-function setWallpaper(input){
-  const file=input.files[0];
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{document.getElementById('wallpaper').style.backgroundImage=`url(${e.target.result})`;localStorage.wallpaper=e.target.result;};
+function setWallpaper(input) {
+  console.log('setWallpaper called with:', input);
+  
+  // Handle both event and element
+  let file;
+  if (input.target && input.target.files) {
+    // It's an event
+    file = input.target.files[0];
+  } else if (input.files) {
+    // It's a file input element
+    file = input.files[0];
+  }
+  
+  if(!file) {
+    console.log('No file selected');
+    return;
+  }
+  
+  console.log('File selected:', file.name);
+  
+  const reader = new FileReader();
+  reader.onload = e => {
+    const wallpaperEl = document.getElementById('wallpaper');
+    const imageData = e.target.result;
+    wallpaperEl.style.backgroundImage = `url(${imageData})`;
+    localStorage.setItem('wallpaper', imageData);
+    console.log('Wallpaper saved to localStorage');
+  };
   reader.readAsDataURL(file);
 }
-if(localStorage.wallpaper) document.getElementById('wallpaper').style.backgroundImage=`url(${localStorage.wallpaper})`;
+
+// Load wallpaper on startup
+const savedWallpaper = localStorage.getItem('wallpaper');
+if(savedWallpaper) {
+  document.getElementById('wallpaper').style.backgroundImage = `url(${savedWallpaper})`;
+  console.log('Wallpaper loaded from localStorage');
+}
 
 if(deviceMode) {
   applyLayout();
+} else {
+  // Still apply wallpaper even if device not chosen yet
+  const savedWallpaper = localStorage.getItem('wallpaper');
+  if(savedWallpaper) {
+    document.getElementById('wallpaper').style.backgroundImage=`url(${savedWallpaper})`;
+  }
 }
 render();
+
+console.log('App initialized. Device:', deviceMode, 'Wallpaper saved:', !!localStorage.getItem('wallpaper'));
+console.log('Functions available:', {
+  addCustomWebApp: typeof addCustomWebApp,
+  setWallpaper: typeof setWallpaper,
+  deleteCurrentNote: typeof deleteCurrentNote
+});
 </script>
 </body>
 </html>
