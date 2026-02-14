@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>iOS Web Home</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
 <link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
 
 <style>
-* { box-sizing: border-box; user-select: none; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body {
   margin: 0;
   font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -20,31 +20,29 @@ body {
 #wallpaper {
   position: fixed;
   inset: 0;
-  background: url("https://images.apple.com/v/ios/home/images/overview/hero/hero_static__f5k0zvib8o2u_large.jpg")
-              center / cover no-repeat;
-  z-index: 0;
+  background: #000 center / cover no-repeat;
 }
 
 /* Home grid */
 #home {
   position: relative;
-  z-index: 1;
   padding: 30px 20px 140px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 22px;
+  z-index: 1;
 }
 
 /* App icon */
 .app {
   text-align: center;
   color: white;
+  cursor: pointer;
 }
 .app img {
   width: 64px;
   height: 64px;
   border-radius: 14px;
-  object-fit: cover;
 }
 .app span {
   display: block;
@@ -60,7 +58,7 @@ body {
   transform: translateX(-50%);
   width: calc(100% - 40px);
   padding: 14px;
-  background: rgba(255,255,255,0.25);
+  background: rgba(255,255,255,.25);
   backdrop-filter: blur(20px);
   border-radius: 28px;
   display: grid;
@@ -88,18 +86,11 @@ body {
   background: #111;
   border-bottom: 1px solid #222;
 }
-
-.back {
-  font-size: 18px;
-}
-
-.title {
-  margin-left: 10px;
-  font-weight: 600;
-}
+.back { font-size: 18px; cursor: pointer; }
+.title { margin-left: 10px; font-weight: 600; }
 
 /* Inputs */
-textarea, input {
+input, textarea {
   width: 100%;
   background: #111;
   color: white;
@@ -108,7 +99,6 @@ textarea, input {
   padding: 10px;
   font-size: 16px;
 }
-
 button {
   padding: 12px;
   border-radius: 12px;
@@ -118,6 +108,30 @@ button {
   font-size: 16px;
   margin-top: 8px;
 }
+
+/* Calculator */
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 10px;
+}
+.calc-grid button {
+  font-size: 22px;
+  border-radius: 50%;
+  padding: 20px;
+}
+.gray { background: #a5a5a5; color: black; }
+.dark { background: #333; color: white; }
+.orange { background: #ff9f0a; color: white; }
+.wide { grid-column: span 2; border-radius: 40px; }
+
+/* Browser */
+.favorite {
+  padding: 12px;
+  border-bottom: 1px solid #222;
+  word-break: break-all;
+}
 </style>
 </head>
 
@@ -126,7 +140,6 @@ button {
 <div id="wallpaper"></div>
 
 <div id="home"></div>
-
 <div id="dock"></div>
 
 <!-- NOTES -->
@@ -144,26 +157,49 @@ button {
     <div class="back" onclick="goHome()">‹ Home</div>
     <div class="title">Calculator</div>
   </div>
+  <div id="calcDisplay" style="font-size:48px;text-align:right;padding:20px;">0</div>
+  <div class="calc-grid">
+    <button class="gray" onclick="clearCalc()">AC</button>
+    <button class="gray" onclick="toggleSign()">±</button>
+    <button class="gray" onclick="percent()">%</button>
+    <button class="orange" onclick="setOp('/')">÷</button>
+
+    <button class="dark" onclick="num(7)">7</button>
+    <button class="dark" onclick="num(8)">8</button>
+    <button class="dark" onclick="num(9)">9</button>
+    <button class="orange" onclick="setOp('*')">×</button>
+
+    <button class="dark" onclick="num(4)">4</button>
+    <button class="dark" onclick="num(5)">5</button>
+    <button class="dark" onclick="num(6)">6</button>
+    <button class="orange" onclick="setOp('-')">−</button>
+
+    <button class="dark" onclick="num(1)">1</button>
+    <button class="dark" onclick="num(2)">2</button>
+    <button class="dark" onclick="num(3)">3</button>
+    <button class="orange" onclick="setOp('+')">+</button>
+
+    <button class="dark wide" onclick="num(0)">0</button>
+    <button class="dark" onclick="dot()">.</button>
+    <button class="orange" onclick="equals()">=</button>
+  </div>
+</div>
+
+<!-- BROWSER -->
+<div id="browser" class="window">
+  <div class="header">
+    <div class="back" onclick="goHome()">‹ Home</div>
+    <div class="title">Browser</div>
+  </div>
   <div style="padding:15px;">
-    <input id="calcDisplay" readonly>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px;">
-      <button onclick="press('7')">7</button>
-      <button onclick="press('8')">8</button>
-      <button onclick="press('9')">9</button>
-      <button onclick="press('/')">÷</button>
-      <button onclick="press('4')">4</button>
-      <button onclick="press('5')">5</button>
-      <button onclick="press('6')">6</button>
-      <button onclick="press('*')">×</button>
-      <button onclick="press('1')">1</button>
-      <button onclick="press('2')">2</button>
-      <button onclick="press('3')">3</button>
-      <button onclick="press('-')">−</button>
-      <button onclick="press('0')">0</button>
-      <button onclick="press('.')">.</button>
-      <button onclick="calculate()">=</button>
-      <button onclick="press('+')">+</button>
-    </div>
+    <input id="browserUrl" placeholder="Enter URL (example.com)">
+    <button onclick="openBrowserUrl()">Go</button>
+
+    <h3>Favorites</h3>
+    <input id="favUrl" placeholder="Add favorite URL">
+    <button onclick="addFavorite()">Add Favorite</button>
+
+    <div id="favorites"></div>
   </div>
 </div>
 
@@ -174,103 +210,116 @@ button {
     <div class="title">Settings</div>
   </div>
   <div style="padding:15px;">
-    <h3>Wallpaper URL</h3>
-    <input id="wallInput">
-    <button onclick="setWallpaper()">Apply</button>
-
-    <h3>Add App</h3>
-    <input id="appName" placeholder="App name">
-    <input id="appUrl" placeholder="https://example.com">
-    <input id="appIcon" type="file" accept="image/*">
-    <button onclick="addApp()">Add</button>
+    <h3>Wallpaper</h3>
+    <input type="file" accept="image/*" onchange="setWallpaper(this)">
   </div>
 </div>
 
 <script>
-const home = document.getElementById("home");
-const dock = document.getElementById("dock");
-const wallpaper = document.getElementById("wallpaper");
-
 /* ---------- APPS ---------- */
-let apps = JSON.parse(localStorage.getItem("apps")) || [
-  { name:"Notes", type:"internal", id:"notes", icon:"https://img.icons8.com/ios-filled/100/ffffff/notes.png" },
-  { name:"Calc", type:"internal", id:"calculator", icon:"https://img.icons8.com/ios-filled/100/ffffff/calculator.png" },
-  { name:"Settings", type:"internal", id:"settings", icon:"https://img.icons8.com/ios-filled/100/ffffff/settings.png" }
+const apps = [
+  { name: "Notes", id: "notes", icon: "https://img.icons8.com/ios-filled/100/ffffff/notes.png" },
+  { name: "Calc", id: "calculator", icon: "https://img.icons8.com/ios-filled/100/ffffff/calculator.png" },
+  { name: "Browser", id: "browser", icon: "https://img.icons8.com/ios-filled/100/ffffff/safari.png" },
+  { name: "Settings", id: "settings", icon: "https://img.icons8.com/ios-filled/100/ffffff/settings.png" }
 ];
 
-function saveApps() {
-  localStorage.setItem("apps", JSON.stringify(apps));
-}
+const home = document.getElementById("home");
 
+/* ---------- RENDER ---------- */
 function render() {
   home.innerHTML = "";
-  apps.forEach((app, i) => {
+  apps.forEach(app => {
     const el = document.createElement("div");
     el.className = "app";
-    el.draggable = true;
     el.innerHTML = `<img src="${app.icon}"><span>${app.name}</span>`;
-    el.onclick = () => openApp(app);
-    el.ondragstart = e => e.dataTransfer.setData("i", i);
-    el.ondragover = e => e.preventDefault();
-    el.ondrop = e => {
-      const from = e.dataTransfer.getData("i");
-      apps.splice(i, 0, apps.splice(from, 1)[0]);
-      saveApps();
-      render();
-    };
+    el.onclick = () => openApp(app.id);
     home.appendChild(el);
   });
 }
+render();
 
-function openApp(app) {
-  if (app.type === "internal") {
-    document.getElementById(app.id).style.display = "flex";
-  } else {
-    window.location.href = app.url;
-  }
+/* ---------- NAV ---------- */
+function openApp(id) {
+  document.getElementById(id).style.display = "flex";
 }
-
 function goHome() {
   document.querySelectorAll(".window").forEach(w => w.style.display = "none");
 }
 
 /* ---------- NOTES ---------- */
-const notes = document.getElementById("notesText");
-notes.value = localStorage.getItem("notes") || "";
-notes.oninput = () => localStorage.setItem("notes", notes.value);
+const notesText = document.getElementById("notesText");
+notesText.value = localStorage.notes || "";
+notesText.oninput = () => localStorage.notes = notesText.value;
 
 /* ---------- CALCULATOR ---------- */
-const display = document.getElementById("calcDisplay");
-function press(v){ display.value += v; }
-function calculate(){
-  try { display.value = Function("return "+display.value)(); }
-  catch { display.value = "Error"; }
+let current = "0", operator = null, stored = null;
+const disp = document.getElementById("calcDisplay");
+function update(){ disp.textContent = current; }
+function num(n){ current = current === "0" ? ""+n : current+n; update(); }
+function dot(){ if(!current.includes(".")) current+="."; update(); }
+function clearCalc(){ current="0"; stored=null; operator=null; update(); }
+function toggleSign(){ current = "" + (-parseFloat(current)); update(); }
+function percent(){ current = "" + (parseFloat(current)/100); update(); }
+function setOp(op){ stored = parseFloat(current); operator = op; current="0"; }
+function equals(){
+  const a = stored, b = parseFloat(current);
+  if(operator==="+") current=""+(a+b);
+  if(operator==="-") current=""+(a-b);
+  if(operator==="*") current=""+(a*b);
+  if(operator==="/") current=b?""+(a/b):"0";
+  update();
 }
 
-/* ---------- SETTINGS ---------- */
-function setWallpaper(){
-  wallpaper.style.backgroundImage = `url(${wallInput.value})`;
+/* ---------- BROWSER ---------- */
+let favorites = JSON.parse(localStorage.favorites || "[]");
+
+function renderFavorites() {
+  const list = document.getElementById("favorites");
+  list.innerHTML = "";
+  favorites.forEach(url => {
+    const d = document.createElement("div");
+    d.className = "favorite";
+    d.textContent = url;
+    d.onclick = () => openUrl(url);
+    list.appendChild(d);
+  });
 }
 
-function addApp(){
-  const file = appIcon.files[0];
-  if (!file) return alert("Pick an icon");
+function normalize(url) {
+  return url.startsWith("http") ? url : "https://" + url;
+}
+
+function openUrl(url) {
+  window.location.href = normalize(url);
+}
+
+function openBrowserUrl() {
+  const url = browserUrl.value.trim();
+  if (url) openUrl(url);
+}
+
+function addFavorite() {
+  const url = favUrl.value.trim();
+  if (!url) return;
+  favorites.push(normalize(url));
+  localStorage.favorites = JSON.stringify(favorites);
+  favUrl.value = "";
+  renderFavorites();
+}
+
+renderFavorites();
+
+/* ---------- WALLPAPER ---------- */
+function setWallpaper(input){
   const r = new FileReader();
   r.onload = () => {
-    apps.push({
-      name: appName.value,
-      type: "web",
-      url: appUrl.value,
-      icon: r.result
-    });
-    saveApps();
-    render();
+    wallpaper.style.backgroundImage = `url(${r.result})`;
+    localStorage.wp = r.result;
   };
-  r.readAsDataURL(file);
+  r.readAsDataURL(input.files[0]);
 }
-
-/* ---------- INIT ---------- */
-render();
+if (localStorage.wp) wallpaper.style.backgroundImage = `url(${localStorage.wp})`;
 </script>
 
 </body>
