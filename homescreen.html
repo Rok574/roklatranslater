@@ -102,7 +102,7 @@ button { padding:12px; border-radius:12px; border:none; background:#007aff; colo
   </div>
 </div>
 
-<!-- WINDOWS -->
+<!-- WINDOWS (Notes, Calculator, Browser, Settings) -->
 <div id="notes" class="window">
   <div class="header"><div class="back" onclick="goHome()">‹ Home</div><div class="title">Notes</div></div>
   <textarea id="notesText" style="flex:1;"></textarea>
@@ -202,7 +202,14 @@ function createAppEl(app) {
     const x = document.createElement("div");
     x.className = "delete-x";
     x.textContent = "×";
-    x.onclick = e => { e.stopImmediatePropagation(); if(confirm(`Delete "${app.name}"?`)) { apps = apps.filter(a=>a!==app); localStorage.setItem("apps",JSON.stringify(apps)); render(); } };
+    x.onclick = e => { 
+      e.stopImmediatePropagation(); 
+      if(confirm(`Delete "${app.name}"?`)) { 
+        apps = apps.filter(a=>a!==app); 
+        localStorage.setItem("apps",JSON.stringify(apps)); 
+        render(); 
+      } 
+    };
     el.appendChild(x);
   }
 
@@ -240,19 +247,18 @@ function render() {
 function renderDock() {
   dock.innerHTML = "";
   const dockCount = deviceMode === 'ipad' ? 6 : 4;
-  for (let i = 0; i < dockCount && i < apps.length; i++) {
-    dock.appendChild(createAppEl(apps[i]));
-  }
+  // take apps flagged as dock first
+  const dockApps = apps.filter(a=>a.dock).slice(0, dockCount);
+  dockApps.forEach(app => dock.appendChild(createAppEl(app)));
 }
 
 function renderPages() {
   home.innerHTML = "";
   const dockCount = deviceMode === 'ipad' ? 6 : 4;
-  const homeApps = apps.slice(dockCount);
+  const homeApps = apps.filter(a=>!a.dock);
   const cols = deviceMode === 'ipad' ? 6 : 4;
   const gap = deviceMode === 'ipad' ? '28px' : '22px';
   const maxPerPage = cols * 5;
-
   const numPages = Math.max(1, Math.ceil(homeApps.length / maxPerPage));
 
   for (let p = 0; p < numPages; p++) {
@@ -315,7 +321,7 @@ function handlePageDrop(e) {
   syncOrder();
 }
 
-// Dock dragover + auto-kick when full (NOW ALLOWS ANY APP)
+// Dock dragover
 dock.addEventListener("dragover", e => {
   e.preventDefault();
   const dragging = document.querySelector(".dragging");
@@ -325,17 +331,35 @@ dock.addEventListener("dragover", e => {
   if (dock.children.length >= maxDock && !dock.contains(dragging)) {
     const last = dock.lastElementChild;
     if (last) {
-      const lastPage = home.lastElementChild;
-      if (lastPage) lastPage.appendChild(last);
-      else home.appendChild(last);
+      const homePage = home.firstElementChild || document.createElement('div');
+      if(!home.firstElementChild) home.appendChild(homePage);
+      homePage.appendChild(last);
     }
   }
-
-  const after = getAfterElement(dock, e.clientX, true);
-  dock.insertBefore(dragging, after || null);
 });
 
-// ─── EDIT / SYNC ────────────────────────────────────────────
+dock.addEventListener("drop", e => {
+  e.preventDefault();
+  const dragging = document.querySelector(".dragging");
+  if (!dragging) return;
+  dock.appendChild(dragging);
+  syncOrder();
+});
+
+// ─── SYNC ORDER ─────────────────────────────────────────────
+function syncOrder() {
+  const dockApps = Array.from(dock.children).map(el => apps.find(a => (a.id||a.url||a.name)===el.dataset.id));
+  const homeApps = Array.from(home.querySelectorAll('.page .app')).map(el => apps.find(a => (a.id||a.url||a.name)===el.dataset.id)).filter(a=>!dockApps.includes(a));
+
+  // Mark dock apps
+  apps.forEach(a => { a.dock = dockApps.includes(a); });
+
+  // Update apps array: dock first, then home apps
+  apps = [...dockApps, ...homeApps];
+  localStorage.setItem("apps", JSON.stringify(apps));
+}
+
+// ─── EDIT MODE ──────────────────────────────────────────────
 function enterEditMode() {
   editMode = true;
   document.body.classList.add("edit-mode");
@@ -345,124 +369,71 @@ function exitEditMode() {
   editMode = false;
   document.body.classList.remove("edit-mode");
   document.getElementById("done").style.display = "none";
+  syncOrder();
+  render();
 }
 
-function syncOrder() {
-  const newApps = [];
+// ─── OPEN APP ──────────────────────────────────────────────
+function openApp(id) { document.getElementById(id)?.style.display='flex'; }
+function goHome() { document.querySelectorAll('.window').forEach(w=>w.style.display='none'); }
 
-  Array.from(dock.children).forEach(el => {
-    const found = apps.find(a => (a.id || a.url || a.name) === el.dataset.id);
-    if (found) newApps.push(found);
-  });
+// ─── WALLPAPER ─────────────────────────────────────────────
+function setWallpaper(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  document.getElementById('wallpaper').style.backgroundImage=`url('${url}')`;
+  localStorage.setItem('wallpaper', url);
+}
+const savedWallpaper = localStorage.getItem('wallpaper');
+if(savedWallpaper) document.getElementById('wallpaper').style.backgroundImage=`url('${savedWallpaper}')`;
 
-  Array.from(home.children).forEach(page => {
-    Array.from(page.children).forEach(el => {
-      const found = apps.find(a => (a.id || a.url || a.name) === el.dataset.id);
-      if (found && !newApps.includes(found)) newApps.push(found);
-    });
-  });
-
-  apps = newApps;
-  localStorage.setItem("apps", JSON.stringify(apps));
+// ─── CUSTOM WEB APPS ──────────────────────────────────────
+function addCustomWebApp() {
+  const name = document.getElementById('webappName').value.trim();
+  const url = document.getElementById('webappUrl').value.trim();
+  const iconFile = document.getElementById('webappIcon').files[0];
+  if(!name || !url || !iconFile) return alert("Fill all fields");
+  const icon = URL.createObjectURL(iconFile);
+  const app = {name,url,icon,isCustom:true};
+  apps.push(app);
+  syncOrder();
+  render();
 }
 
-
-// ─── WINDOWS & FEATURES ─────────────────────────────────────
-function openApp(id) { document.querySelectorAll(".window").forEach(w=>w.style.display="none"); document.getElementById(id).style.display="flex"; }
-function goHome() { document.querySelectorAll(".window").forEach(w=>w.style.display="none"); }
-
-// Notes
-const notesText = document.getElementById("notesText");
-notesText.value = localStorage.notes || "";
-notesText.oninput = e => localStorage.notes = e.target.value;
-
-// Calculator (same as before)
-let current = "0", operator = null, stored = null;
-const disp = document.getElementById("calcDisplay");
-function update(){ disp.textContent = current; }
-function num(n){ current = current === "0" ? ""+n : current+n; update(); }
-function dot(){ if(!current.includes(".")) current+="."; update(); }
-function clearCalc(){ current="0"; stored=null; operator=null; update(); }
-function toggleSign(){ current = "" + (-parseFloat(current)); update(); }
-function percent(){ current = "" + (parseFloat(current)/100); update(); }
-function setOp(op){ stored = parseFloat(current); operator = op; current="0"; }
-function equals(){
-  const a = stored, b = parseFloat(current);
-  if(operator==="+") current=""+(a+b);
-  if(operator==="-") current=""+(a-b);
-  if(operator==="*") current=""+(a*b);
-  if(operator==="/") current=b?""+(a/b):"0";
-  update();
-}
-
-// Browser (same)
-let favorites = JSON.parse(localStorage.favorites || "[]");
-function renderFavorites() {
-  const list = document.getElementById("favorites");
-  list.innerHTML = "";
-  favorites.forEach(url => {
-    const d = document.createElement("div");
-    d.className = "favorite";
-    d.textContent = url;
-    d.onclick = () => window.open(url.startsWith("http") ? url : "https://"+url, "_blank");
-    list.appendChild(d);
-  });
-}
-function openBrowserUrl() {
-  const url = document.getElementById("browserUrl").value.trim();
-  if (url) window.open(url.startsWith("http") ? url : "https://"+url, "_blank");
-}
+// ─── BROWSER ──────────────────────────────────────────────
+let favorites = JSON.parse(localStorage.getItem('favorites')||'[]');
 function addFavorite() {
-  const url = document.getElementById("favUrl").value.trim();
-  if (!url) return;
-  favorites.push(url.startsWith("http") ? url : "https://"+url);
-  localStorage.favorites = JSON.stringify(favorites);
-  document.getElementById("favUrl").value = "";
+  const url = document.getElementById('favUrl').value.trim();
+  if(!url) return;
+  favorites.push(url);
+  localStorage.setItem('favorites', JSON.stringify(favorites));
   renderFavorites();
+}
+function renderFavorites() {
+  const container = document.getElementById('favorites');
+  container.innerHTML = '';
+  favorites.forEach(f => {
+    const el = document.createElement('div');
+    el.className='favorite';
+    el.textContent=f;
+    el.onclick=()=>window.open(f,'_blank');
+    container.appendChild(el);
+  });
 }
 renderFavorites();
 
-// Custom Web App
-function addCustomWebApp() {
-  const name = document.getElementById("webappName").value.trim();
-  const urlInput = document.getElementById("webappUrl").value.trim();
-  const file = document.getElementById("webappIcon").files[0];
-  if (!name || !urlInput) return alert("Name and URL required");
-  const url = urlInput.startsWith("http") ? urlInput : "https://" + urlInput;
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = e => {
-      apps.push({name, url, icon: e.target.result, isCustom: true});
-      localStorage.setItem("apps", JSON.stringify(apps));
-      render();
-      clearCustomInputs();
-    };
-    reader.readAsDataURL(file);
-  } else {
-    apps.push({name, url, icon: "https://img.icons8.com/ios-filled/100/ffffff/globe.png", isCustom: true});
-    localStorage.setItem("apps", JSON.stringify(apps));
-    render();
-    clearCustomInputs();
-  }
-}
-function clearCustomInputs() {
-  document.getElementById("webappName").value = "";
-  document.getElementById("webappUrl").value = "";
-  document.getElementById("webappIcon").value = "";
-}
+// ─── CALCULATOR ───────────────────────────────────────────
+let calcValue=0, currentOp=null, newNum=false;
+const display=document.getElementById('calcDisplay');
+function num(n){ if(newNum){display.textContent=''; newNum=false;} display.textContent+=n; }
+function dot(){ if(!display.textContent.includes('.')) display.textContent+='.'; }
+function clearCalc(){ display.textContent='0'; calcValue=0; currentOp=null; newNum=true; }
+function setOp(op){ calcValue=parseFloat(display.textContent); currentOp=op; newNum=true; }
+function equals(){ if(currentOp){ const curr=parseFloat(display.textContent); let res; switch(currentOp){ case'+':res=calcValue+curr;break; case'-':res=calcValue-curr;break; case'*':res=calcValue*curr;break; case'/':res=calcValue/curr;break;} display.textContent=res; currentOp=null; newNum=true; } }
+function toggleSign(){ display.textContent=(parseFloat(display.textContent)||0)*-1; }
+function percent(){ display.textContent=(parseFloat(display.textContent)||0)/100; }
 
-// Wallpaper
-function setWallpaper(input) {
-  const r = new FileReader();
-  r.onload = () => {
-    document.getElementById("wallpaper").style.backgroundImage = `url(${r.result})`;
-    localStorage.wp = r.result;
-  };
-  r.readAsDataURL(input.files[0]);
-}
-if (localStorage.wp) document.getElementById("wallpaper").style.backgroundImage = `url(${localStorage.wp})`;
-
-// ─── START ──────────────────────────────────────────────────
 applyLayout();
 render();
 </script>
