@@ -11,21 +11,36 @@ margin:0;
 font-family:-apple-system,BlinkMacSystemFont,sans-serif;
 background-size:cover;
 background-position:center;
+background-repeat:no-repeat;
+background-attachment:fixed;
 overflow:hidden;
 }
 
-.grid{
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(85px,1fr));
-gap:25px;
-padding:40px 20px 120px;
+/* Pages */
+.pages{
+display:flex;
+height:100vh;
+width:100vw;
+overflow-x:auto;
+scroll-snap-type:x mandatory;
+scroll-behavior:smooth;
 }
 
+.page{
+flex:0 0 100vw;
+scroll-snap-align:start;
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:25px;
+padding:50px 20px 120px;
+box-sizing:border-box;
+}
+
+/* App */
 .app{
 text-align:center;
 color:white;
 font-size:12px;
-user-select:none;
 }
 
 .icon{
@@ -39,7 +54,6 @@ align-items:center;
 justify-content:center;
 margin:auto;
 overflow:hidden;
-transition:transform .2s;
 }
 
 .icon img{
@@ -48,15 +62,7 @@ height:100%;
 object-fit:cover;
 }
 
-.jiggle{
-animation:jiggle .25s infinite alternate;
-}
-
-@keyframes jiggle{
-from{transform:rotate(-2deg);}
-to{transform:rotate(2deg);}
-}
-
+/* Dock */
 .dock{
 position:fixed;
 bottom:20px;
@@ -72,6 +78,7 @@ justify-content:space-evenly;
 align-items:center;
 }
 
+/* Folder */
 .folder-overlay{
 position:fixed;
 inset:0;
@@ -97,6 +104,7 @@ font-size:18px;
 margin-bottom:15px;
 }
 
+/* Modal */
 .modal{
 position:fixed;
 inset:0;
@@ -133,7 +141,7 @@ color:white;
 margin-top:10px;
 }
 
-/* CSS Plus Icon */
+/* CSS + Icon */
 .plus-icon{
 width:60px;
 height:60px;
@@ -165,14 +173,14 @@ top:10px;
 
 <body>
 
-<div class="grid" id="grid"></div>
+<div class="pages" id="pages"></div>
 
 <div class="dock" id="dock"></div>
 
 <div class="folder-overlay" id="folderOverlay">
 <div class="folder-box">
 <div class="folder-title" id="folderTitle"></div>
-<div class="grid" id="folderApps"></div>
+<div class="page" id="folderApps"></div>
 </div>
 </div>
 
@@ -181,7 +189,7 @@ top:10px;
 </div>
 
 <script>
-const grid=document.getElementById("grid");
+const pagesContainer=document.getElementById("pages");
 const dock=document.getElementById("dock");
 const modal=document.getElementById("modal");
 const modalContent=document.getElementById("modalContent");
@@ -191,7 +199,6 @@ const folderApps=document.getElementById("folderApps");
 
 const settingsIcon="file_00000000bfa071fdb19690b2a2813e8f";
 
-let editing=false;
 let apps=JSON.parse(localStorage.getItem("apps")||"[]");
 let dockApps=JSON.parse(localStorage.getItem("dockApps")||"[]");
 
@@ -218,10 +225,9 @@ localStorage.setItem("apps",JSON.stringify(apps));
 localStorage.setItem("dockApps",JSON.stringify(dockApps));
 }
 
-function createIcon(app,index,container,isDock=false){
+function createAppElement(app){
 const el=document.createElement("div");
 el.className="app";
-el.draggable=true;
 
 const icon=document.createElement("div");
 icon.className="icon";
@@ -235,47 +241,41 @@ icon.innerHTML=`<img src="${app.icon}">`;
 el.appendChild(icon);
 el.innerHTML+=`<div>${app.name}</div>`;
 
-el.oncontextmenu=e=>e.preventDefault();
-
-el.onmousedown=()=>{
-setTimeout(()=>{
-editing=true;
-document.querySelectorAll(".icon").forEach(i=>i.classList.add("jiggle"));
-},500);
-};
-
 el.onclick=()=>{
-if(editing)return;
 if(app.type==="folder")openFolder(app);
 else if(app.url)window.open(app.url,"_blank");
 else if(app.action)app.action();
 };
 
-el.ondragstart=e=>{
-e.dataTransfer.setData("text/plain",index);
-};
-
-container.appendChild(el);
+return el;
 }
 
 function render(){
-grid.innerHTML="";
+pagesContainer.innerHTML="";
 dock.innerHTML="";
-apps.forEach((a,i)=>createIcon(a,i,grid));
-dockApps.forEach((a,i)=>createIcon(a,i,dock,true));
+
+const appsPerPage=16;
+for(let i=0;i<apps.length;i+=appsPerPage){
+const page=document.createElement("div");
+page.className="page";
+apps.slice(i,i+appsPerPage).forEach(app=>{
+page.appendChild(createAppElement(app));
+});
+pagesContainer.appendChild(page);
 }
 
-grid.ondragover=e=>e.preventDefault();
-grid.ondrop=e=>{
-const index=e.dataTransfer.getData("text/plain");
-const moved=[...apps,dockApps[index]];
-};
+dockApps.forEach(app=>{
+dock.appendChild(createAppElement(app));
+});
+}
 
 function openFolder(folder){
 folderOverlay.style.display="flex";
 folderTitle.innerText=folder.name;
 folderApps.innerHTML="";
-folder.apps.forEach(a=>createIcon(a,0,folderApps));
+folder.apps.forEach(app=>{
+folderApps.appendChild(createAppElement(app));
+});
 folderOverlay.onclick=()=>folderOverlay.style.display="none";
 }
 
