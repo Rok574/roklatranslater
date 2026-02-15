@@ -1,16 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>iOS Home</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Home</title>
 
 <style>
-body{
-  margin:0;
-  font-family:-apple-system,system-ui;
+:root{
+  --app-radius:20px;
+  --dock-radius:40px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+html,body{
+  height:100%;
+  font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  overflow:hidden;
   background:#000;
   color:white;
-  overflow:hidden;
 }
 
 #wallpaper{
@@ -21,292 +29,235 @@ body{
 }
 
 #home{
-  position:absolute;
-  inset:0;
-  padding:20px;
+  position:relative;
+  z-index:1;
+  padding:40px 20px 140px;
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:22px;
-  align-content:start;
-  z-index:1;
+  gap:28px;
 }
 
 .app{
   text-align:center;
-  cursor:pointer;
 }
 
 .app img{
-  width:64px;
-  height:64px;
-  border-radius:14px;
+  width:72px;
+  height:72px;
+  border-radius:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
 }
 
 .app span{
   display:block;
-  font-size:12px;
   margin-top:6px;
+  font-size:13px;
+}
+
+#dock{
+  position:fixed;
+  left:50%;
+  bottom:20px;
+  transform:translateX(-50%);
+  padding:14px 28px;
+  display:flex;
+  gap:28px;
+  border-radius:40px;
+  backdrop-filter:blur(30px) saturate(160%);
+  -webkit-backdrop-filter:blur(30px) saturate(160%);
+  background:rgba(30,30,30,.55);
+  box-shadow:0 20px 50px rgba(0,0,0,.6);
+}
+
+#dock img{
+  width:64px;
+  height:64px;
+  border-radius:18px;
 }
 
 .window{
   position:fixed;
   inset:0;
   background:#000;
+  z-index:20;
   display:none;
   flex-direction:column;
-  z-index:10;
 }
 
 .header{
-  padding:16px;
+  height:56px;
+  display:flex;
+  align-items:center;
+  padding:0 16px;
   border-bottom:1px solid #222;
   font-weight:600;
-  display:flex;
-  justify-content:space-between;
 }
 
-input,textarea{
+textarea,input{
+  width:100%;
   background:#111;
   color:white;
-  border:1px solid #222;
-  border-radius:10px;
-  padding:12px;
-  width:100%;
-  margin-bottom:10px;
+  border:none;
+  padding:14px;
+  font-size:16px;
 }
 
 button{
-  background:#007aff;
+  margin:12px;
+  padding:14px;
+  border-radius:14px;
   border:none;
+  background:#007aff;
   color:white;
-  padding:12px;
-  border-radius:10px;
+  font-size:16px;
 }
+
+#toast{
+  position:fixed;
+  bottom:120px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(30,30,30,.95);
+  padding:12px 20px;
+  border-radius:20px;
+  display:none;
+  z-index:50;
+}
+
+input[type=file]{display:none}
 </style>
 </head>
 <body>
 
 <div id="wallpaper"></div>
+
 <div id="home"></div>
 
-<!-- SETTINGS -->
-<div id="settings" class="window">
-  <div class="header">
-    <div>Settings</div>
-    <div onclick="goHome()" style="color:#007aff;cursor:pointer">Done</div>
-  </div>
-  <div style="padding:16px">
-    <h3>Add Web App</h3>
-    <input id="webName" placeholder="App Name">
-    <input id="webUrl" placeholder="example.com">
-    <input id="webIcon" type="file" accept="image/*">
-    <button onclick="addWebApp()">Add to Home Screen</button>
-  </div>
-</div>
+<div id="dock"></div>
 
-<!-- NOTES -->
+<div id="toast"></div>
+
 <div id="notes" class="window">
-  <div class="header">
-    <div>Notes</div>
-    <div onclick="newNote()" style="color:#007aff;cursor:pointer">New</div>
-  </div>
-  <div id="notesList" style="padding:16px;overflow:auto;flex:1"></div>
+  <div class="header">Notes</div>
+  <textarea id="noteArea"></textarea>
+  <button onclick="saveNote()">Save</button>
+  <button onclick="closeWindow('notes')">Close</button>
 </div>
 
-<div id="editor" class="window">
-  <div class="header">
-    <div onclick="closeEditor()" style="color:#007aff;cursor:pointer">Back</div>
-    <div onclick="deleteNote()" style="color:#ff3b30;cursor:pointer">Delete</div>
-  </div>
-  <div style="padding:16px;flex:1">
-    <input id="noteTitle" placeholder="Title">
-    <textarea id="noteContent" style="height:60vh"></textarea>
-  </div>
+<div id="google" class="window">
+  <div class="header">Google</div>
+  <input id="searchInput" placeholder="Search or type URL">
+  <button onclick="search()">Go</button>
+  <button onclick="addFavorite()">Add to Favorites</button>
+  <div id="favoritesList"></div>
+  <button onclick="closeWindow('google')">Close</button>
 </div>
 
-<!-- BROWSER -->
-<div id="browser" class="window">
-  <div class="header">
-    <div>Browser</div>
-    <div onclick="goHome()" style="color:#007aff;cursor:pointer">Done</div>
-  </div>
-  <div style="padding:16px">
-    <input id="browserUrl" placeholder="example.com">
-    <button onclick="openUrl()">Go</button>
-    <h3>Favorites</h3>
-    <input id="favInput" placeholder="example.com">
-    <button onclick="addFavorite()">Add Favorite</button>
-    <div id="favList"></div>
-  </div>
-</div>
+<input type="file" id="wallInput" accept="image/*">
 
 <script>
-let apps = JSON.parse(localStorage.getItem("apps")) || [
-  {name:"Notes",type:"notes",icon:"https://i.imgur.com/9D6V4Xx.png"},
-  {name:"Browser",type:"browser",icon:"https://i.imgur.com/XV3Txqf.png"},
-  {name:"Settings",type:"settings",icon:"https://i.imgur.com/crghH6U.png"}
+const home=document.getElementById('home');
+const dock=document.getElementById('dock');
+const toast=document.getElementById('toast');
+
+let apps=[
+  {name:"Notes",icon:"https://i.imgur.com/9D6V4Xx.png",action:"notes"},
+  {name:"Google",icon:"https://i.imgur.com/XV3Txqf.png",action:"google"},
+  {name:"Wallpaper",icon:"https://i.imgur.com/crghH6U.png",action:"wall"},
 ];
 
-function saveApps(){
-  localStorage.setItem("apps",JSON.stringify(apps));
-}
-
 function render(){
-  const home=document.getElementById("home");
-  home.innerHTML="";
-  apps.forEach(app=>{
-    const div=document.createElement("div");
-    div.className="app";
-    div.innerHTML=`<img src="${app.icon}"><span>${app.name}</span>`;
-    div.onclick=()=>openApp(app);
-    home.appendChild(div);
+  home.innerHTML='';
+  dock.innerHTML='';
+  apps.forEach((app,i)=>{
+    const el=document.createElement('div');
+    el.className='app';
+    el.innerHTML=`<img src="${app.icon}"><span>${app.name}</span>`;
+    el.onclick=()=>openApp(app.action);
+    if(i<2)dock.appendChild(el.cloneNode(true));
+    home.appendChild(el);
   });
 }
 
-function openApp(app){
-  if(app.url){
-    window.open(app.url,"_blank");
-    return;
+function openApp(action){
+  if(action==="notes"){
+    document.getElementById('notes').style.display='flex';
+    document.getElementById('noteArea').value=
+      localStorage.getItem('note')||'';
   }
-  document.getElementById(app.type).style.display="flex";
-}
-
-function goHome(){
-  document.querySelectorAll(".window").forEach(w=>w.style.display="none");
-}
-
-/* WEB APP FIX */
-function addWebApp(){
-  let name=document.getElementById("webName").value.trim();
-  let url=document.getElementById("webUrl").value.trim();
-  let file=document.getElementById("webIcon").files[0];
-
-  if(!name||!url||!file){
-    alert("Fill all fields");
-    return;
+  if(action==="google"){
+    document.getElementById('google').style.display='flex';
+    renderFavorites();
   }
-
-  if(!url.startsWith("http://")&&!url.startsWith("https://")){
-    url="https://"+url;
+  if(action==="wall"){
+    document.getElementById('wallInput').click();
   }
-
-  const reader=new FileReader();
-  reader.onload=e=>{
-    apps.push({
-      name:name,
-      url:url,
-      icon:e.target.result
-    });
-
-    saveApps();
-    render();
-
-    document.getElementById("webName").value="";
-    document.getElementById("webUrl").value="";
-    document.getElementById("webIcon").value="";
-
-    alert("Added to Home Screen");
-    goHome();
-  };
-  reader.readAsDataURL(file);
 }
 
-/* NOTES FIX */
-let notes=JSON.parse(localStorage.getItem("notes"))||[];
-let current=null;
-
-function saveNotes(){
-  localStorage.setItem("notes",JSON.stringify(notes));
+function closeWindow(id){
+  document.getElementById(id).style.display='none';
 }
 
-function renderNotes(){
-  const list=document.getElementById("notesList");
-  list.innerHTML="";
-  notes.forEach(n=>{
-    const div=document.createElement("div");
-    div.style.padding="10px 0";
-    div.style.borderBottom="1px solid #222";
-    div.textContent=n.title||"New Note";
-    div.onclick=()=>openNote(n.id);
-    list.appendChild(div);
-  });
+function saveNote(){
+  localStorage.setItem('note',
+    document.getElementById('noteArea').value);
+  showToast("Saved");
 }
 
-function newNote(){
-  const note={id:Date.now(),title:"",content:""};
-  notes.unshift(note);
-  saveNotes();
-  openNote(note.id);
-}
-
-function openNote(id){
-  current=id;
-  const note=notes.find(n=>n.id===id);
-  document.getElementById("noteTitle").value=note.title;
-  document.getElementById("noteContent").value=note.content;
-  document.getElementById("notes").style.display="none";
-  document.getElementById("editor").style.display="flex";
-}
-
-function closeEditor(){
-  const note=notes.find(n=>n.id===current);
-  note.title=document.getElementById("noteTitle").value;
-  note.content=document.getElementById("noteContent").value;
-  saveNotes();
-  renderNotes();
-  goHome();
-}
-
-function deleteNote(){
-  notes=notes.filter(n=>n.id!==current);
-  saveNotes();
-  renderNotes();
-  goHome();
-}
-
-/* FAVORITES FIX */
-let favorites=JSON.parse(localStorage.getItem("favorites"))||[];
-
-function saveFav(){
-  localStorage.setItem("favorites",JSON.stringify(favorites));
-}
-
-function renderFav(){
-  const list=document.getElementById("favList");
-  list.innerHTML="";
-  favorites.forEach(url=>{
-    const div=document.createElement("div");
-    div.style.padding="6px 0";
-    div.textContent=url;
-    div.onclick=()=>window.open(url,"_blank");
-    list.appendChild(div);
-  });
+function search(){
+  let val=document.getElementById('searchInput').value;
+  if(!val.startsWith('http'))val="https://"+val;
+  window.open(val,'_blank');
 }
 
 function addFavorite(){
-  let url=document.getElementById("favInput").value.trim();
-  if(!url)return;
-  if(!url.startsWith("http://")&&!url.startsWith("https://")){
-    url="https://"+url;
+  let val=document.getElementById('searchInput').value;
+  if(!val)return;
+  let favs=JSON.parse(localStorage.getItem('favs'))||[];
+  if(!favs.includes(val)){
+    favs.push(val);
+    localStorage.setItem('favs',JSON.stringify(favs));
+    showToast("Added to Favorites");
+    renderFavorites();
   }
-  favorites.push(url);
-  saveFav();
-  renderFav();
-  document.getElementById("favInput").value="";
 }
 
-function openUrl(){
-  let url=document.getElementById("browserUrl").value.trim();
-  if(!url)return;
-  if(!url.startsWith("http://")&&!url.startsWith("https://")){
-    url="https://"+url;
-  }
-  window.open(url,"_blank");
+function renderFavorites(){
+  const list=document.getElementById('favoritesList');
+  let favs=JSON.parse(localStorage.getItem('favs'))||[];
+  list.innerHTML='';
+  favs.forEach(f=>{
+    const d=document.createElement('div');
+    d.textContent=f;
+    d.onclick=()=>window.open(f,'_blank');
+    list.appendChild(d);
+  });
+}
+
+function showToast(msg){
+  toast.textContent=msg;
+  toast.style.display='block';
+  setTimeout(()=>toast.style.display='none',1800);
+}
+
+document.getElementById('wallInput').onchange=e=>{
+  const file=e.target.files[0];
+  const reader=new FileReader();
+  reader.onload=()=>{
+    localStorage.setItem('wall',reader.result);
+    document.getElementById('wallpaper')
+      .style.backgroundImage=`url(${reader.result})`;
+  };
+  reader.readAsDataURL(file);
+};
+
+const savedWall=localStorage.getItem('wall');
+if(savedWall){
+  document.getElementById('wallpaper')
+    .style.backgroundImage=`url(${savedWall})`;
 }
 
 render();
-renderNotes();
-renderFav();
 </script>
 </body>
 </html>
