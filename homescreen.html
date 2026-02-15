@@ -1,390 +1,396 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>iOS 18 Web Home</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>iOS 18 Web OS</title>
 
 <style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+}
+
 body{
-margin:0;
-font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-background-size:cover;
-background-position:center;
-background-repeat:no-repeat;
-background-attachment:fixed;
-overflow:hidden;
-color:white;
+  font-family:-apple-system,BlinkMacSystemFont;
+  overflow:hidden;
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
 }
 
-/* DONE BUTTON */
-.done-btn{
-position:fixed;
-top:20px;
-right:20px;
-font-size:17px;
-font-weight:600;
-color:#0a84ff;
-display:none;
-z-index:50;
+/* HOME */
+
+.home-wrapper{
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+  position:relative;
 }
 
-/* PAGES */
 .pages{
-display:flex;
-height:100vh;
-width:100vw;
-overflow-x:auto;
-scroll-snap-type:x mandatory;
-scroll-behavior:smooth;
+  display:flex;
+  height:100%;
+  transition:transform .35s ease;
 }
 
 .page{
-flex:0 0 100vw;
-scroll-snap-align:start;
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:30px;
-padding:90px 25px 170px;
-box-sizing:border-box;
+  width:100vw;
+  padding:110px 25px 140px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  grid-auto-rows:110px;
+  gap:28px 18px;
 }
 
-/* APP */
 .app{
-text-align:center;
-font-size:12px;
-text-shadow:0 2px 8px rgba(0,0,0,0.7);
-position:relative;
+  text-align:center;
+  position:relative;
 }
 
-.icon{
-width:74px;
-height:74px;
-border-radius:22px;
-background:rgba(255,255,255,0.25);
-backdrop-filter:blur(30px);
-display:flex;
-align-items:center;
-justify-content:center;
-margin:auto;
-overflow:hidden;
-transition:transform .15s;
+.app img{
+  width:68px;
+  height:68px;
+  border-radius:18px;
+  pointer-events:none;
+  -webkit-user-drag:none;
+  box-shadow:0 10px 25px rgba(0,0,0,.35);
 }
 
-.icon img{
-width:100%;
-height:100%;
-object-fit:cover;
+.app span{
+  font-size:13px;
+  color:white;
+  text-shadow:0 2px 6px rgba(0,0,0,.8);
+  margin-top:6px;
+  display:block;
 }
 
-/* DELETE */
 .delete-btn{
-position:absolute;
-top:-8px;
-left:8px;
-width:22px;
-height:22px;
-border-radius:50%;
-background:#ff3b30;
-display:none;
-align-items:center;
-justify-content:center;
-font-size:14px;
+  position:absolute;
+  top:-8px;
+  right:8px;
+  width:20px;
+  height:20px;
+  background:#ff3b30;
+  color:white;
+  border-radius:50%;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
 }
 
-.jiggle{
-animation:jiggle .15s infinite alternate;
+.edit-mode .delete-btn{
+  display:flex;
 }
 
-@keyframes jiggle{
-from{transform:rotate(-2deg);}
-to{transform:rotate(2deg);}
+.done-btn{
+  position:fixed;
+  top:55px;
+  right:25px;
+  background:#f2f2f7;
+  padding:8px 16px;
+  border-radius:16px;
+  font-weight:600;
+  display:none;
+}
+
+.edit-mode .done-btn{
+  display:block;
+}
+
+/* DOCK */
+
+.dock{
+  position:fixed;
+  bottom:25px;
+  left:50%;
+  transform:translateX(-50%);
+  width:92%;
+  max-width:500px;
+  height:85px;
+  backdrop-filter:blur(30px);
+  background:rgba(255,255,255,.12);
+  border-radius:30px;
+  display:flex;
+  align-items:center;
+  justify-content:space-evenly;
 }
 
 /* DOTS */
+
 .dots{
-position:fixed;
-bottom:135px;
-width:100%;
-text-align:center;
+  position:fixed;
+  bottom:115px;
+  width:100%;
+  text-align:center;
 }
 
 .dot{
-width:7px;
-height:7px;
-margin:0 4px;
-border-radius:50%;
-display:inline-block;
-background:rgba(255,255,255,0.4);
-}
-.dot.active{background:white;}
-
-/* FULLSCREEN APP */
-.fullscreen{
-position:fixed;
-inset:0;
-background:#1c1c1e;
-display:none;
-flex-direction:column;
-padding:80px 20px 40px;
-z-index:60;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:rgba(255,255,255,.4);
+  display:inline-block;
+  margin:0 4px;
 }
 
-/* SETTINGS STYLE */
-.title{
-font-size:28px;
-font-weight:700;
-margin-bottom:25px;
+.dot.active{
+  background:white;
 }
 
-.card{
-background:#2c2c2e;
-padding:18px;
-border-radius:18px;
-margin-bottom:20px;
+/* WINDOWS */
+
+.window{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:white;
+  display:none;
+  flex-direction:column;
 }
 
-input{
-width:100%;
-padding:14px;
-border-radius:14px;
-border:none;
-margin-top:12px;
-background:#3a3a3c;
-color:white;
+.window header{
+  height:55px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 20px;
+  font-weight:600;
+  border-bottom:1px solid #ddd;
 }
 
-button{
-width:100%;
-padding:14px;
-border-radius:14px;
-border:none;
-background:#0a84ff;
-color:white;
-margin-top:15px;
-font-size:16px;
+.close{
+  font-weight:600;
 }
 
-.preview{
-text-align:center;
-margin-top:20px;
+.window iframe{
+  flex:1;
+  border:none;
 }
 
-.preview img{
-width:80px;
-height:80px;
-border-radius:22px;
-margin-bottom:10px;
+/* SETTINGS */
+
+.settings-content{
+  padding:20px;
 }
 
-.home-bar{
-position:fixed;
-bottom:8px;
-left:50%;
-transform:translateX(-50%);
-width:140px;
-height:5px;
-border-radius:4px;
-background:white;
-z-index:70;
+.settings-content button{
+  padding:12px;
+  width:100%;
+  border-radius:12px;
+  border:none;
+  background:#f2f2f7;
+  margin-bottom:12px;
+  font-weight:600;
+}
+
+.settings-content input{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #ccc;
+  margin-bottom:12px;
 }
 </style>
 </head>
-
 <body>
 
-<div class="done-btn" id="doneBtn" onclick="exitEdit()">Done</div>
-<div class="pages" id="pages"></div>
+<div class="home-wrapper">
+  <div class="pages" id="pages"></div>
+</div>
+
 <div class="dots" id="dots"></div>
+<div class="done-btn" onclick="exitEdit()">Done</div>
 
-<!-- SETTINGS -->
-<div class="fullscreen" id="settingsApp">
-<div class="title">Settings</div>
-<div class="card" onclick="document.getElementById('bgUpload').click()">Change Wallpaper</div>
-<div class="card" onclick="openAdder()">Add Web App</div>
+<div class="dock" id="dock"></div>
+
+<!-- SETTINGS WINDOW -->
+<div class="window" id="settingsWin">
+<header>
+Settings
+<div class="close" onclick="closeWindow('settingsWin')">Done</div>
+</header>
+<div class="settings-content">
+
+<h3 style="margin-bottom:10px;">Wallpaper</h3>
+<input type="file" id="wallUpload">
+<button onclick="setWallpaper()">Set Wallpaper</button>
+
+<hr style="margin:20px 0;">
+
+<h3 style="margin-bottom:10px;">Add Web App</h3>
+<input id="webLink" placeholder="Enter website link">
+<button onclick="addWebApp()">Add Web App</button>
+
 </div>
-
-<!-- WEB APP ADDER -->
-<div class="fullscreen" id="adderApp">
-<div class="title">Add Web App</div>
-<input id="urlInput" placeholder="Enter website link">
-<button onclick="fetchSite()">Preview</button>
-
-<div class="preview" id="previewArea" style="display:none;">
-<img id="previewIcon">
-<input id="previewName">
-<button onclick="confirmAdd()">Add to Home Screen</button>
 </div>
-</div>
-
-<input type="file" id="bgUpload" accept="image/*" hidden>
-<div class="home-bar" onclick="closeApps()"></div>
 
 <script>
-const pages=document.getElementById("pages");
-const dots=document.getElementById("dots");
-const doneBtn=document.getElementById("doneBtn");
-const settingsApp=document.getElementById("settingsApp");
-const adderApp=document.getElementById("adderApp");
+let apps=[];
+let currentPage=0;
+let editMode=false;
 
-let editing=false;
-let holdTimer;
-let apps=JSON.parse(localStorage.getItem("apps")||"[]");
+document.body.style.backgroundImage=
+"url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqbDxP4DYF4o2HgMeEuMvponVEvINt1FrCaMX8r5HOCmk9eIwBQP7YpJI&s=10')";
 
-function save(){
-localStorage.setItem("apps",JSON.stringify(apps));
-}
+function render(){
+  const pagesEl=document.getElementById("pages");
+  const dotsEl=document.getElementById("dots");
+  pagesEl.innerHTML="";
+  dotsEl.innerHTML="";
 
-function setWallpaper(url){
-document.body.style.backgroundImage=`url('${url}')`;
-localStorage.setItem("wallpaper",url);
-}
+  const perPage=20;
+  const pageCount=Math.ceil(apps.length/perPage)||1;
 
-function loadWallpaper(){
-setWallpaper(localStorage.getItem("wallpaper")||
-"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqbDxP4DYF4o2HgMeEuMvponVEvINt1FrCaMX8r5HOCmk9eIwBQP7YpJI&s=10");
-}
+  for(let p=0;p<pageCount;p++){
+    const page=document.createElement("div");
+    page.className="page";
 
-function enterEdit(){
-editing=true;
-doneBtn.style.display="block";
-document.querySelectorAll(".icon").forEach(i=>i.classList.add("jiggle"));
-document.querySelectorAll(".delete-btn").forEach(d=>d.style.display="flex");
-}
+    apps.slice(p*perPage,(p+1)*perPage).forEach((app,i)=>{
+      const appEl=createApp(app,p*perPage+i);
+      page.appendChild(appEl);
+    });
 
-function exitEdit(){
-editing=false;
-doneBtn.style.display="none";
-document.querySelectorAll(".icon").forEach(i=>i.classList.remove("jiggle"));
-document.querySelectorAll(".delete-btn").forEach(d=>d.style.display="none");
+    pagesEl.appendChild(page);
+
+    const dot=document.createElement("div");
+    dot.className="dot"+(p===currentPage?" active":"");
+    dotsEl.appendChild(dot);
+  }
+
+  pagesEl.style.transform=`translateX(-${currentPage*100}vw)`;
 }
 
 function createApp(app,index){
-const el=document.createElement("div");
-el.className="app";
-el.draggable=true;
+  const div=document.createElement("div");
+  div.className="app";
+  div.draggable=true;
 
-const del=document.createElement("div");
-del.className="delete-btn";
-del.innerText="−";
-del.onclick=(e)=>{
-e.stopPropagation();
-apps.splice(index,1);
-save();
-render();
-};
-el.appendChild(del);
+  div.innerHTML=`
+    <div class="delete-btn" onclick="deleteApp(${index})">×</div>
+    <img src="${app.icon}">
+    <span>${app.name}</span>
+  `;
 
-const icon=document.createElement("div");
-icon.className="icon";
-icon.innerHTML=`<img src="${app.icon}">`;
-el.appendChild(icon);
+  div.onclick=()=>{
+    if(!editMode) openApp(app);
+  };
 
-el.innerHTML+=`<div>${app.name}</div>`;
+  div.addEventListener("dragstart",e=>{
+    if(!editMode) e.preventDefault();
+    e.dataTransfer.setData("text",index);
+  });
 
-el.onmousedown=()=>{
-holdTimer=setTimeout(()=>enterEdit(),500);
-};
-el.onmouseup=()=>clearTimeout(holdTimer);
+  div.addEventListener("dragover",e=>e.preventDefault());
 
-el.onclick=()=>{
-if(editing)return;
-if(app.name==="Settings")settingsApp.style.display="flex";
-else window.open(app.url,"_blank");
-};
+  div.addEventListener("drop",e=>{
+    const from=e.dataTransfer.getData("text");
+    const temp=apps[from];
+    apps.splice(from,1);
+    apps.splice(index,0,temp);
+    render();
+  });
 
-return el;
+  let hold;
+  div.addEventListener("touchstart",()=>{
+    hold=setTimeout(()=>enterEdit(),500);
+  });
+  div.addEventListener("touchend",()=>clearTimeout(hold));
+
+  return div;
 }
 
-function render(){
-pages.innerHTML="";
-dots.innerHTML="";
-
-const perPage=16;
-for(let i=0;i<apps.length;i+=perPage){
-const page=document.createElement("div");
-page.className="page";
-apps.slice(i,i+perPage).forEach((a,idx)=>{
-page.appendChild(createApp(a,i+idx));
-});
-pages.appendChild(page);
+function deleteApp(i){
+  apps.splice(i,1);
+  render();
 }
 
-const total=Math.ceil(apps.length/perPage);
-for(let i=0;i<total;i++){
-const dot=document.createElement("span");
-dot.className="dot";
-if(i===0)dot.classList.add("active");
-dots.appendChild(dot);
+function enterEdit(){
+  editMode=true;
+  document.body.classList.add("edit-mode");
 }
 
-pages.onscroll=()=>{
-const index=Math.round(pages.scrollLeft/window.innerWidth);
-document.querySelectorAll(".dot").forEach((d,i)=>{
-d.classList.toggle("active",i===index);
-});
-};
+function exitEdit(){
+  editMode=false;
+  document.body.classList.remove("edit-mode");
 }
 
-/* WEB APP ADDER */
-
-function openAdder(){
-settingsApp.style.display="none";
-adderApp.style.display="flex";
+function openApp(app){
+  if(app.type==="settings"){
+    document.getElementById("settingsWin").style.display="flex";
+  } else {
+    const win=document.createElement("div");
+    win.className="window";
+    win.style.display="flex";
+    win.innerHTML=`
+      <header>
+        ${app.name}
+        <div class="close" onclick="this.parentElement.parentElement.remove()">Done</div>
+      </header>
+      <iframe src="${app.url}"></iframe>
+    `;
+    document.body.appendChild(win);
+  }
 }
 
-async function fetchSite(){
-let url=document.getElementById("urlInput").value;
-if(!url.startsWith("http"))url="https://"+url;
-
-const domain=new URL(url).hostname;
-
-const title=domain.replace("www.","");
-const icon="https://www.google.com/s2/favicons?sz=128&domain="+domain;
-
-document.getElementById("previewIcon").src=icon;
-document.getElementById("previewName").value=title;
-document.getElementById("previewArea").style.display="block";
+function closeWindow(id){
+  document.getElementById(id).style.display="none";
 }
 
-function confirmAdd(){
-let name=document.getElementById("previewName").value;
-let url=document.getElementById("urlInput").value;
-if(!url.startsWith("http"))url="https://"+url;
-const domain=new URL(url).hostname;
-
-apps.push({
-name:name,
-url:url,
-icon:"https://www.google.com/s2/favicons?sz=128&domain="+domain
-});
-save();
-location.reload();
+function setWallpaper(){
+  const file=document.getElementById("wallUpload").files[0];
+  const reader=new FileReader();
+  reader.onload=e=>{
+    document.body.style.backgroundImage=`url('${e.target.result}')`;
+  };
+  reader.readAsDataURL(file);
 }
 
-function closeApps(){
-settingsApp.style.display="none";
-adderApp.style.display="none";
+async function addWebApp(){
+  let link=document.getElementById("webLink").value.trim();
+  if(!link.startsWith("http")) link="https://"+link;
+
+  try{
+    const res=await fetch("https://api.allorigins.win/raw?url="+encodeURIComponent(link));
+    const text=await res.text();
+    const doc=new DOMParser().parseFromString(text,"text/html");
+
+    let name=doc.querySelector("title")?.innerText||"Web App";
+    let icon=doc.querySelector("link[rel*='icon']")?.href
+      ||"https://www.google.com/s2/favicons?sz=128&domain="+link;
+
+    const newName=prompt("Confirm name:",name);
+    if(!newName) return;
+
+    apps.push({name:newName,icon:icon,url:link});
+    render();
+    closeWindow("settingsWin");
+
+  }catch{
+    alert("Failed to fetch site.");
+  }
 }
 
-document.getElementById("bgUpload").addEventListener("change",function(){
-const file=this.files[0];
-const reader=new FileReader();
-reader.onload=e=>setWallpaper(e.target.result);
-if(file)reader.readAsDataURL(file);
-});
-
-if(apps.length===0){
 apps=[
-{name:"Chrome",url:"https://google.com",icon:"https://cdn.jim-nielsen.com/ios/512/chrome-web-browser-by-google-2016-01-25.png?rf=512"},
-{name:"Settings",url:"#",icon:"file_00000000bfa071fdb19690b2a2813e8f"}
+  {
+    name:"Chrome",
+    icon:"https://cdn.jim-nielsen.com/ios/512/chrome-web-browser-by-google-2016-01-25.png?rf=512",
+    url:"https://google.com"
+  },
+  {
+    name:"Settings",
+    icon:"/mnt/data/07627759-FA8D-4273-BADF-819BAAB35097.png",
+    type:"settings"
+  }
 ];
-save();
-}
 
-loadWallpaper();
 render();
 </script>
-
 </body>
 </html>
