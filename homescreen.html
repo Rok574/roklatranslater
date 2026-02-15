@@ -45,9 +45,12 @@ input, textarea { width:100%; background:#1c1c1e; color:white; border:none; bord
 button { padding:14px; border-radius:14px; border:none; background:#0a84ff; color:white; font-size:17px; font-weight:600; margin-top:12px; }
 
 #notesList { flex:1; overflow-y:auto; padding:10px; }
-.note-item { padding:14px 16px; border-bottom:1px solid #222; cursor:pointer; }
+.note-item { display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-bottom:1px solid #222; cursor:pointer; }
+.note-item .info { flex:1; }
 .note-item .title { font-size:17px; font-weight:600; }
 .note-item .preview { font-size:15px; color:#888; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.note-item .delete-btn { color:#ff3b30; font-size:20px; padding:8px; cursor:pointer; opacity:0.7; }
+.note-item .delete-btn:hover { opacity:1; }
 
 #notesEditor { display:none; flex-direction:column; flex:1; }
 #noteTitle { border:none; background:transparent; font-size:28px; font-weight:600; padding:20px 20px 10px; color:white; }
@@ -82,7 +85,7 @@ button { padding:14px; border-radius:14px; border:none; background:#0a84ff; colo
 
 <div id="notes" class="window">
   <div class="header">
-    <div class="back" onclick="closeNotesEditor()">Folders</div>
+    <div class="back" onclick="goHome()">‹ Home</div>
     <div class="title" style="flex:1;text-align:center;">Notes</div>
     <div onclick="newNote()" style="color:#0a84ff;font-size:17px;font-weight:600;cursor:pointer;">New</div>
   </div>
@@ -357,13 +360,22 @@ function syncOrder() {
 
 function openApp(id) { 
   document.querySelectorAll(".window").forEach(w=>w.style.display="none"); 
-  document.getElementById(id).style.display="flex"; 
-  if (id === "notes") renderNotesList();
+  const win = document.getElementById(id);
+  if (win) {
+    win.style.display="flex";
+    if (id === "notes") {
+      document.getElementById('notesEditor').style.display = 'none';
+      document.getElementById('notesList').style.display = 'block';
+      renderNotesList();
+    }
+  }
 }
 
-function goHome() { document.querySelectorAll(".window").forEach(w=>w.style.display="none"); }
+function goHome() { 
+  document.querySelectorAll(".window").forEach(w=>w.style.display="none"); 
+}
 
-// ==================== NOTES iOS 18 ====================
+// Notes iOS 18 style
 let notesData = JSON.parse(localStorage.getItem('notesData')) || [];
 let currentNoteId = null;
 
@@ -383,10 +395,13 @@ function renderNotesList() {
     const div = document.createElement('div');
     div.className = 'note-item';
     div.innerHTML = `
-      <div class="title">${note.title || 'Untitled'}</div>
-      <div class="preview">${note.content ? note.content.substring(0, 80) + '...' : 'Empty note'}</div>
+      <div class="info">
+        <div class="title">${note.title || 'Untitled'}</div>
+        <div class="preview">${note.content ? note.content.substring(0, 80) + '...' : 'Empty note'}</div>
+      </div>
+      <div class="delete-btn" onclick="deleteNote(${note.id})">×</div>
     `;
-    div.onclick = () => openNote(note.id);
+    div.querySelector('.info').onclick = (e) => { e.stopPropagation(); openNote(note.id); };
     list.appendChild(div);
   });
 }
@@ -412,10 +427,14 @@ function openNote(id) {
   document.getElementById('noteContent').value = note.content || '';
 }
 
-function closeNotesEditor() {
-  saveCurrentNote();
-  document.getElementById('notesList').style.display = 'block';
-  document.getElementById('notesEditor').style.display = 'none';
+function deleteNote(id) {
+  if (!confirm("Delete this note?")) return;
+  notesData = notesData.filter(n => n.id !== id);
+  localStorage.setItem('notesData', JSON.stringify(notesData));
+  if (currentNoteId === id) {
+    document.getElementById('notesEditor').style.display = 'none';
+    document.getElementById('notesList').style.display = 'block';
+  }
   renderNotesList();
 }
 
@@ -423,13 +442,13 @@ function saveCurrentNote() {
   if (!currentNoteId) return;
   const note = notesData.find(n => n.id === currentNoteId);
   if (note) {
-    note.title = document.getElementById('noteTitle').value;
+    note.title = document.getElementById('noteTitle').value.trim() || 'Untitled';
     note.content = document.getElementById('noteContent').value;
     localStorage.setItem('notesData', JSON.stringify(notesData));
   }
 }
 
-// ==================== OTHER APPS ====================
+// Calculator (unchanged)
 let current = "0", operator = null, stored = null;
 const disp = document.getElementById("calcDisplay");
 function update(){ disp.textContent = current; }
@@ -448,6 +467,7 @@ function equals(){
   update();
 }
 
+// Browser & favorites (unchanged)
 let favorites = JSON.parse(localStorage.favorites || "[]");
 function renderFavorites() {
   const list = document.getElementById("favorites");
@@ -474,6 +494,7 @@ function addFavorite() {
 }
 renderFavorites();
 
+// Custom Web App with favicon auto-fetch
 function addCustomWebApp() {
   const name = document.getElementById("webappName").value.trim();
   const urlInput = document.getElementById("webappUrl").value.trim();
