@@ -24,34 +24,12 @@ body{
 
 .home{
   width:100vw;
-  height:calc(100vh - 120px); /* Leave space for dock */
-  padding:110px 25px 20px;
+  height:100vh;
+  padding:110px 25px 140px;
   display:grid;
   grid-template-columns:repeat(4,1fr);
   grid-auto-rows:110px;
   gap:28px 18px;
-}
-
-.dock{
-  position:fixed;
-  bottom:0;
-  left:0;
-  width:100%;
-  height:120px;
-  background:rgba(0,0,0,0.3);
-  backdrop-filter:blur(15px);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:18px;
-  padding:0 20px;
-  z-index:100;
-  border-top-left-radius:20px;
-  border-top-right-radius:20px;
-}
-
-.dock .app{
-  flex-shrink:0;
 }
 
 .app{
@@ -162,7 +140,6 @@ body{
 <body>
 
 <div class="home" id="home"></div>
-<div class="dock" id="dock"></div>
 <div class="done-btn" onclick="exitEdit()">Done</div>
 
 <div class="window" id="settingsWin">
@@ -185,7 +162,6 @@ Settings
 
 <script>
 let apps=[];
-let dockApps=[];
 let editMode=false;
 let dragIndex=null;
 
@@ -195,15 +171,8 @@ if(localStorage.getItem("apps")){
   apps=JSON.parse(localStorage.getItem("apps"));
 }else{
   apps=[
-    {name:"Chrome",icon:"https://cdn.jim-nielsen.com/ios/512/chrome-web-browser-by-google-2016-01-25.png?rf=512",url:"https://google.com",system:true},
     {name:"Settings",icon:"/mnt/data/07627759-FA8D-4273-BADF-819BAAB35097.png",type:"settings",system:true}
   ];
-}
-
-if(localStorage.getItem("dockApps")){
-  dockApps=JSON.parse(localStorage.getItem("dockApps"));
-}else{
-  dockApps=[apps[0]]; // put first app in dock by default
 }
 
 if(localStorage.getItem("wallpaper")){
@@ -216,22 +185,14 @@ if(localStorage.getItem("wallpaper")){
 
 function render(){
   localStorage.setItem("apps",JSON.stringify(apps));
-  localStorage.setItem("dockApps",JSON.stringify(dockApps));
-
   const home=document.getElementById("home");
   home.innerHTML="";
   apps.forEach((app,i)=>{
-    if(!dockApps.includes(app)) home.appendChild(createApp(app,i,"home"));
-  });
-
-  const dock=document.getElementById("dock");
-  dock.innerHTML="";
-  dockApps.forEach((app,i)=>{
-    dock.appendChild(createApp(app,i,"dock"));
+    home.appendChild(createApp(app,i));
   });
 }
 
-function createApp(app,index,type){
+function createApp(app,index){
   const div=document.createElement("div");
   div.className="app";
 
@@ -241,7 +202,7 @@ function createApp(app,index,type){
     del.innerText="×";
     del.onclick=(e)=>{
       e.stopPropagation();
-      deleteApp(index,type);
+      deleteApp(index);
     };
     div.appendChild(del);
   }
@@ -288,16 +249,9 @@ function createApp(app,index,type){
     div.addEventListener("dragover",e=>e.preventDefault());
     div.addEventListener("drop",()=>{
       if(dragIndex===null) return;
-      let arr = type==="dock" ? dockApps : apps.filter(a=>!dockApps.includes(a));
-      const temp=arr[dragIndex];
-      arr.splice(dragIndex,1);
-      arr.splice(index,0,temp);
-
-      if(type==="dock") dockApps=arr;
-      else {
-        apps = [...dockApps,...arr];
-      }
-
+      const temp=apps[dragIndex];
+      apps.splice(dragIndex,1);
+      apps.splice(index,0,temp);
       dragIndex=null;
       render();
     });
@@ -306,14 +260,9 @@ function createApp(app,index,type){
   return div;
 }
 
-function deleteApp(i,type){
-  if(type==="dock"){
-    dockApps.splice(i,1);
-  }else{
-    const allApps=apps.filter(a=>!dockApps.includes(a));
-    allApps.splice(i,1);
-    apps=[...dockApps,...allApps];
-  }
+function deleteApp(i){
+  if(apps[i].system) return;
+  apps.splice(i,1);
   render();
 }
 
