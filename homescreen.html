@@ -1,210 +1,342 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>iOS / iPadOS Home</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>iOS Web Home</title>
+
 <style>
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body { margin:0; font-family:'SF Pro Display',-apple-system,sans-serif; background:black; overflow:hidden; }
-#wallpaper { position:fixed; inset:0; background:#000 center/cover no-repeat; z-index:0; }
-
-/* iPhone layout */
-body.iphone .app img { width:64px; height:64px; border-radius:14px; }
-body.iphone .app span { font-size:12px; margin-top:6px; }
-
-/* iPad layout */
-body.ipad .app img { width:72px; height:72px; border-radius:18px; }
-body.ipad .app span { font-size:13px; margin-top:8px; }
-
-/* Shared */
-.app {
-  text-align:center;
-  color:white;
-  cursor:pointer;
-  position:relative;
-  transition:transform .15s;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
+body{
+margin:0;
+font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+background-size:cover;
+background-position:center;
+overflow:hidden;
 }
 
-.app span {
-  display:block;
-  max-width:100%;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(85px,1fr));
+gap:25px;
+padding:40px 20px 120px;
 }
 
-.app:active { transform:scale(0.92); }
-.app.dragging { opacity:0.6; transform:scale(1.12); z-index:10; }
-
-.delete-x {
-  position:absolute; top:-8px; right:-8px;
-  width:24px; height:24px;
-  background:#ff3b30; color:white;
-  border-radius:50%;
-  font-size:19px; font-weight:bold;
-  display:none; align-items:center; justify-content:center;
-  box-shadow:0 2px 8px rgba(0,0,0,0.5);
+.app{
+text-align:center;
+color:white;
+font-size:12px;
+user-select:none;
 }
 
-body.edit-mode .app.is-custom .delete-x { display:flex; }
-body.edit-mode .app { animation:wiggle 0.8s infinite; }
-
-@keyframes wiggle {
-  0%,100%{transform:rotate(-3deg);}
-  25%{transform:rotate(3deg);}
-  50%{transform:rotate(-2deg);}
-  75%{transform:rotate(2deg);}
+.icon{
+width:72px;
+height:72px;
+border-radius:20px;
+background:rgba(255,255,255,0.25);
+backdrop-filter:blur(25px);
+display:flex;
+align-items:center;
+justify-content:center;
+margin:auto;
+overflow:hidden;
+transition:transform .2s;
 }
 
-#home {
-  position:relative; z-index:1;
-  height: calc(100vh - 220px);
-  display:flex; overflow-x:auto;
-  scroll-snap-type:x mandatory;
-  scroll-behavior:smooth;
-  -webkit-overflow-scrolling:touch;
+.icon img{
+width:100%;
+height:100%;
+object-fit:cover;
 }
 
-.page {
-  flex:0 0 100%;
-  height:100%;
-  padding:20px;
-  scroll-snap-align:start;
-  display:grid;
-  grid-template-columns:repeat(var(--cols),1fr);
-  gap:var(--gap);
-  align-content:start;
-  overflow-y:auto;
+.jiggle{
+animation:jiggle .25s infinite alternate;
 }
 
-#dock {
-  position:fixed;
-  bottom:20px;
-  left:50%;
-  transform:translateX(-50%);
-  background:rgba(255,255,255,.25);
-  backdrop-filter:blur(20px);
-  border-radius:28px;
-  display:flex;
-  justify-content:center;
-  z-index:2;
+@keyframes jiggle{
+from{transform:rotate(-2deg);}
+to{transform:rotate(2deg);}
 }
 
-body.iphone #dock { width:min(420px, calc(100% - 40px)); padding:14px 20px; gap:24px; }
-body.ipad #dock { width:min(620px, calc(100% - 48px)); padding:18px 28px; gap:32px; }
-
-#done {
-  position:fixed; top:24px; right:24px;
-  background:rgba(0,122,255,0.85);
-  color:white;
-  padding:7px 20px;
-  border-radius:30px;
-  font-size:17px;
-  font-weight:600;
-  display:none;
-  z-index:30;
-  cursor:pointer;
+.dock{
+position:fixed;
+bottom:20px;
+left:50%;
+transform:translateX(-50%);
+width:90%;
+height:90px;
+border-radius:30px;
+background:rgba(255,255,255,0.25);
+backdrop-filter:blur(30px);
+display:flex;
+justify-content:space-evenly;
+align-items:center;
 }
 
-/* Toast */
-#toast{
-  position:fixed;
-  bottom:140px;
-  left:50%;
-  transform:translateX(-50%);
-  background:rgba(0,0,0,0.85);
-  color:white;
-  padding:12px 18px;
-  border-radius:20px;
-  font-size:14px;
-  opacity:0;
-  transition:opacity .3s ease, transform .3s ease;
-  z-index:1000;
-  pointer-events:none;
+.folder-overlay{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.7);
+display:none;
+flex-direction:column;
+align-items:center;
+padding-top:80px;
 }
 
+.folder-box{
+background:rgba(255,255,255,0.15);
+backdrop-filter:blur(30px);
+border-radius:30px;
+padding:20px;
+width:85%;
+}
+
+.folder-title{
+text-align:center;
+color:white;
+font-size:18px;
+margin-bottom:15px;
+}
+
+.modal{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.6);
+display:none;
+justify-content:center;
+align-items:center;
+}
+
+.modal-content{
+background:#1c1c1e;
+padding:20px;
+border-radius:20px;
+width:90%;
+max-width:400px;
+color:white;
+}
+
+input{
+width:100%;
+padding:10px;
+margin:8px 0;
+border-radius:10px;
+border:none;
+}
+
+button{
+width:100%;
+padding:10px;
+border-radius:12px;
+border:none;
+background:#0a84ff;
+color:white;
+margin-top:10px;
+}
+
+/* CSS Plus Icon */
+.plus-icon{
+width:60px;
+height:60px;
+border-radius:18px;
+background:linear-gradient(145deg,#0a84ff,#5ac8fa);
+position:relative;
+}
+.plus-icon::before,
+.plus-icon::after{
+content:"";
+position:absolute;
+background:white;
+border-radius:5px;
+}
+.plus-icon::before{
+width:40px;
+height:8px;
+top:26px;
+left:10px;
+}
+.plus-icon::after{
+height:40px;
+width:8px;
+left:26px;
+top:10px;
+}
 </style>
 </head>
+
 <body>
 
-<div id="wallpaper"></div>
-<div id="home"></div>
-<div id="dock"></div>
-<div id="done" onclick="exitEditMode()">Done</div>
-<div id="toast">App Added</div>
+<div class="grid" id="grid"></div>
+
+<div class="dock" id="dock"></div>
+
+<div class="folder-overlay" id="folderOverlay">
+<div class="folder-box">
+<div class="folder-title" id="folderTitle"></div>
+<div class="grid" id="folderApps"></div>
+</div>
+</div>
+
+<div class="modal" id="modal">
+<div class="modal-content" id="modalContent"></div>
+</div>
 
 <script>
+const grid=document.getElementById("grid");
+const dock=document.getElementById("dock");
+const modal=document.getElementById("modal");
+const modalContent=document.getElementById("modalContent");
+const folderOverlay=document.getElementById("folderOverlay");
+const folderTitle=document.getElementById("folderTitle");
+const folderApps=document.getElementById("folderApps");
 
-// APPS
-let apps = JSON.parse(localStorage.getItem("apps")) || [
-  { name: "Notes", id: "notes", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRC4wjEB3rsNICYcrehZUz4hvDbHg4LhMh_Xw&s", isCustom: false },
-  { name: "Calculator", id: "calculator", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8Je98ZqXhgWmbiohpPpuBO2oNgajOWG3mHw&s", isCustom: false },
-  { name: "Chrome", id: "browser", icon: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/e6/16/cd/e616cd30-09be-220e-fc18-d1ffea0ab74e/Placeholder.mill/200x200bb-75.webp", isCustom: false },
-  { name: "Settings", id: "settings", icon: "https://i.imgur.com/crghH6U.png", isCustom: false }
-];
+const settingsIcon="file_00000000bfa071fdb19690b2a2813e8f";
 
-const home = document.getElementById("home");
-const dock = document.getElementById("dock");
+let editing=false;
+let apps=JSON.parse(localStorage.getItem("apps")||"[]");
+let dockApps=JSON.parse(localStorage.getItem("dockApps")||"[]");
 
-function createAppEl(app){
-  const el = document.createElement("div");
-  el.className="app";
-  if(app.isCustom) el.classList.add("is-custom");
-  el.dataset.id = app.id || app.url || app.name;
+const defaultIOS="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqbDxP4DYF4o2HgMeEuMvponVEvINt1FrCaMX8r5HOCmk9eIwBQP7YpJI&s=10";
+const defaultIPad="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSbpuXWak4q_NWpGEqrzGloWtRJ0Oe41k_6lqLSjXRxWAQsXgPU9hLZSoW7&s=10";
 
-  el.innerHTML = `<img src="${app.icon}"><span>${app.name}</span>`;
+function isIPad(){
+return /iPad/.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&screen.width>1000);
+}
 
-  if(app.isCustom){
-    const x=document.createElement("div");
-    x.className="delete-x";
-    x.textContent="×";
-    x.onclick=e=>{
-      e.stopImmediatePropagation();
-      const id=app.id||app.url||app.name;
-      apps=apps.filter(a=>(a.id||a.url||a.name)!==id);
-      localStorage.setItem("apps",JSON.stringify(apps));
-      render();
-    };
-    el.appendChild(x);
-  }
+function setWallpaper(url){
+document.body.style.backgroundImage=`url('${url}')`;
+localStorage.setItem("wallpaper",url);
+}
 
-  el.onclick=()=>{
-    if(app.id) alert(app.name+" opened");
-    else if(app.url) window.open(app.url,"_blank");
-  };
+function loadWallpaper(){
+const saved=localStorage.getItem("wallpaper");
+if(saved)setWallpaper(saved);
+else setWallpaper(isIPad()?defaultIPad:defaultIOS);
+}
 
-  return el;
+function save(){
+localStorage.setItem("apps",JSON.stringify(apps));
+localStorage.setItem("dockApps",JSON.stringify(dockApps));
+}
+
+function createIcon(app,index,container,isDock=false){
+const el=document.createElement("div");
+el.className="app";
+el.draggable=true;
+
+const icon=document.createElement("div");
+icon.className="icon";
+
+if(app.type==="adder"){
+icon.innerHTML=`<div class="plus-icon"></div>`;
+}else{
+icon.innerHTML=`<img src="${app.icon}">`;
+}
+
+el.appendChild(icon);
+el.innerHTML+=`<div>${app.name}</div>`;
+
+el.oncontextmenu=e=>e.preventDefault();
+
+el.onmousedown=()=>{
+setTimeout(()=>{
+editing=true;
+document.querySelectorAll(".icon").forEach(i=>i.classList.add("jiggle"));
+},500);
+};
+
+el.onclick=()=>{
+if(editing)return;
+if(app.type==="folder")openFolder(app);
+else if(app.url)window.open(app.url,"_blank");
+else if(app.action)app.action();
+};
+
+el.ondragstart=e=>{
+e.dataTransfer.setData("text/plain",index);
+};
+
+container.appendChild(el);
 }
 
 function render(){
-  dock.innerHTML="";
-  home.innerHTML="";
-
-  apps.slice(0,4).forEach(a=>dock.appendChild(createAppEl(a)));
-  const page=document.createElement("div");
-  page.className="page";
-  page.style.setProperty('--cols',4);
-  page.style.setProperty('--gap','22px');
-
-  apps.slice(4).forEach(a=>page.appendChild(createAppEl(a)));
-  home.appendChild(page);
+grid.innerHTML="";
+dock.innerHTML="";
+apps.forEach((a,i)=>createIcon(a,i,grid));
+dockApps.forEach((a,i)=>createIcon(a,i,dock,true));
 }
 
-function showToast(){
-  const t=document.getElementById("toast");
-  t.style.opacity="1";
-  t.style.transform="translateX(-50%) translateY(-10px)";
-  setTimeout(()=>{
-    t.style.opacity="0";
-    t.style.transform="translateX(-50%)";
-  },2000);
+grid.ondragover=e=>e.preventDefault();
+grid.ondrop=e=>{
+const index=e.dataTransfer.getData("text/plain");
+const moved=[...apps,dockApps[index]];
+};
+
+function openFolder(folder){
+folderOverlay.style.display="flex";
+folderTitle.innerText=folder.name;
+folderApps.innerHTML="";
+folder.apps.forEach(a=>createIcon(a,0,folderApps));
+folderOverlay.onclick=()=>folderOverlay.style.display="none";
 }
 
+function openSettings(){
+modalContent.innerHTML=`
+<h3>Settings</h3>
+<input type="file" accept="image/*" id="bgUpload">
+<button onclick="applyBg()">Set Wallpaper</button>
+<button onclick="createFolder()">Create Folder</button>
+`;
+modal.style.display="flex";
+}
+
+function applyBg(){
+const file=document.getElementById("bgUpload").files[0];
+const reader=new FileReader();
+reader.onload=e=>{
+setWallpaper(e.target.result);
+modal.style.display="none";
+};
+if(file)reader.readAsDataURL(file);
+}
+
+function createFolder(){
+let name=prompt("Folder Name");
+if(!name)return;
+apps.push({type:"folder",name:name,apps:[]});
+save();
+render();
+modal.style.display="none";
+}
+
+function openAdder(){
+modalContent.innerHTML=`
+<h3>Web App Adder</h3>
+<input id="appName" placeholder="App Name">
+<input id="appURL" placeholder="example.com">
+<button onclick="addApp()">Add App</button>
+`;
+modal.style.display="flex";
+}
+
+function addApp(){
+let name=document.getElementById("appName").value;
+let url=document.getElementById("appURL").value;
+if(!url.startsWith("http"))url="https://"+url;
+apps.push({name:name,url:url,icon:"https://www.google.com/s2/favicons?sz=128&domain="+url});
+save();
+location.reload();
+}
+
+if(apps.length===0){
+apps=[
+{name:"Chrome",url:"https://google.com",icon:"https://cdn.jim-nielsen.com/ios/512/chrome-web-browser-by-google-2016-01-25.png?rf=512"},
+{name:"Web App Adder",type:"adder",action:openAdder},
+{name:"Settings",icon:settingsIcon,action:openSettings}
+];
+save();
+}
+
+loadWallpaper();
 render();
 </script>
 
