@@ -32,7 +32,7 @@ scroll-snap-align:start;
 display:grid;
 grid-template-columns:repeat(4,1fr);
 gap:25px;
-padding:50px 20px 120px;
+padding:50px 20px 160px;
 box-sizing:border-box;
 }
 
@@ -41,6 +41,7 @@ box-sizing:border-box;
 text-align:center;
 color:white;
 font-size:12px;
+text-shadow:0 2px 6px rgba(0,0,0,0.6);
 }
 
 .icon{
@@ -65,7 +66,7 @@ object-fit:cover;
 /* Dock */
 .dock{
 position:fixed;
-bottom:20px;
+bottom:40px;
 left:50%;
 transform:translateX(-50%);
 width:90%;
@@ -78,67 +79,74 @@ justify-content:space-evenly;
 align-items:center;
 }
 
-/* Folder */
-.folder-overlay{
+/* Page Dots */
+.dots{
+position:fixed;
+bottom:135px;
+width:100%;
+text-align:center;
+}
+
+.dot{
+display:inline-block;
+width:8px;
+height:8px;
+margin:0 4px;
+border-radius:50%;
+background:rgba(255,255,255,0.4);
+}
+
+.dot.active{
+background:white;
+}
+
+/* Fullscreen Apps */
+.fullscreen{
 position:fixed;
 inset:0;
-background:rgba(0,0,0,0.7);
+background:#1c1c1e;
+color:white;
 display:none;
 flex-direction:column;
-align-items:center;
-padding-top:80px;
-}
-
-.folder-box{
-background:rgba(255,255,255,0.15);
-backdrop-filter:blur(30px);
-border-radius:30px;
 padding:20px;
-width:85%;
+overflow:auto;
+z-index:10;
 }
 
-.folder-title{
-text-align:center;
-color:white;
-font-size:18px;
+.header{
+font-size:22px;
+font-weight:600;
+margin-bottom:20px;
+}
+
+.card{
+padding:15px;
+border-radius:14px;
+background:#2c2c2e;
 margin-bottom:15px;
-}
-
-/* Modal */
-.modal{
-position:fixed;
-inset:0;
-background:rgba(0,0,0,0.6);
-display:none;
-justify-content:center;
-align-items:center;
-}
-
-.modal-content{
-background:#1c1c1e;
-padding:20px;
-border-radius:20px;
-width:90%;
-max-width:400px;
-color:white;
+text-align:center;
 }
 
 input{
 width:100%;
-padding:10px;
-margin:8px 0;
-border-radius:10px;
-border:none;
-}
-
-button{
-width:100%;
-padding:10px;
+padding:12px;
 border-radius:12px;
 border:none;
-background:#0a84ff;
-color:white;
 margin-top:10px;
+}
+
+/* iOS Home Indicator */
+.home-bar{
+position:fixed;
+bottom:8px;
+left:50%;
+transform:translateX(-50%);
+width:140px;
+height:5px;
+border-radius:4px;
+background:white;
+opacity:0.9;
+z-index:20;
 }
 
 /* CSS + Icon */
@@ -174,34 +182,36 @@ top:10px;
 <body>
 
 <div class="pages" id="pages"></div>
-
+<div class="dots" id="dots"></div>
 <div class="dock" id="dock"></div>
 
-<div class="folder-overlay" id="folderOverlay">
-<div class="folder-box">
-<div class="folder-title" id="folderTitle"></div>
-<div class="page" id="folderApps"></div>
-</div>
+<!-- Settings -->
+<div class="fullscreen" id="settingsApp">
+<div class="header">Settings</div>
+<div class="card" onclick="document.getElementById('bgUpload').click()">Change Wallpaper</div>
+<input type="file" id="bgUpload" accept="image/*" hidden>
+<div class="card" onclick="createFolder()">Create Folder</div>
 </div>
 
-<div class="modal" id="modal">
-<div class="modal-content" id="modalContent"></div>
+<!-- Web App Adder -->
+<div class="fullscreen" id="adderApp">
+<div class="header">Web App Adder</div>
+<input id="appName" placeholder="App Name">
+<input id="appURL" placeholder="example.com">
+<div class="card" onclick="addApp()">Add App</div>
 </div>
+
+<div class="home-bar" onclick="closeAllApps()"></div>
 
 <script>
 const pagesContainer=document.getElementById("pages");
-const dock=document.getElementById("dock");
-const modal=document.getElementById("modal");
-const modalContent=document.getElementById("modalContent");
-const folderOverlay=document.getElementById("folderOverlay");
-const folderTitle=document.getElementById("folderTitle");
-const folderApps=document.getElementById("folderApps");
-
-const settingsIcon="file_00000000bfa071fdb19690b2a2813e8f";
+const dotsContainer=document.getElementById("dots");
+const settingsApp=document.getElementById("settingsApp");
+const adderApp=document.getElementById("adderApp");
 
 let apps=JSON.parse(localStorage.getItem("apps")||"[]");
-let dockApps=JSON.parse(localStorage.getItem("dockApps")||"[]");
 
+const settingsIcon="file_00000000bfa071fdb19690b2a2813e8f";
 const defaultIOS="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqbDxP4DYF4o2HgMeEuMvponVEvINt1FrCaMX8r5HOCmk9eIwBQP7YpJI&s=10";
 const defaultIPad="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSbpuXWak4q_NWpGEqrzGloWtRJ0Oe41k_6lqLSjXRxWAQsXgPU9hLZSoW7&s=10";
 
@@ -222,7 +232,6 @@ else setWallpaper(isIPad()?defaultIPad:defaultIOS);
 
 function save(){
 localStorage.setItem("apps",JSON.stringify(apps));
-localStorage.setItem("dockApps",JSON.stringify(dockApps));
 }
 
 function createAppElement(app){
@@ -242,9 +251,9 @@ el.appendChild(icon);
 el.innerHTML+=`<div>${app.name}</div>`;
 
 el.onclick=()=>{
-if(app.type==="folder")openFolder(app);
+if(app.name==="Settings")settingsApp.style.display="flex";
+else if(app.type==="adder")adderApp.style.display="flex";
 else if(app.url)window.open(app.url,"_blank");
-else if(app.action)app.action();
 };
 
 return el;
@@ -252,70 +261,53 @@ return el;
 
 function render(){
 pagesContainer.innerHTML="";
-dock.innerHTML="";
+dotsContainer.innerHTML="";
 
-const appsPerPage=16;
-for(let i=0;i<apps.length;i+=appsPerPage){
+const perPage=16;
+const totalPages=Math.ceil(apps.length/perPage);
+
+for(let i=0;i<apps.length;i+=perPage){
 const page=document.createElement("div");
 page.className="page";
-apps.slice(i,i+appsPerPage).forEach(app=>{
+apps.slice(i,i+perPage).forEach(app=>{
 page.appendChild(createAppElement(app));
 });
 pagesContainer.appendChild(page);
 }
 
-dockApps.forEach(app=>{
-dock.appendChild(createAppElement(app));
+for(let i=0;i<totalPages;i++){
+const dot=document.createElement("span");
+dot.className="dot";
+if(i===0)dot.classList.add("active");
+dotsContainer.appendChild(dot);
+}
+
+pagesContainer.addEventListener("scroll",()=>{
+const index=Math.round(pagesContainer.scrollLeft/window.innerWidth);
+document.querySelectorAll(".dot").forEach((d,i)=>{
+d.classList.toggle("active",i===index);
+});
 });
 }
 
-function openFolder(folder){
-folderOverlay.style.display="flex";
-folderTitle.innerText=folder.name;
-folderApps.innerHTML="";
-folder.apps.forEach(app=>{
-folderApps.appendChild(createAppElement(app));
-});
-folderOverlay.onclick=()=>folderOverlay.style.display="none";
+function closeAllApps(){
+settingsApp.style.display="none";
+adderApp.style.display="none";
 }
 
-function openSettings(){
-modalContent.innerHTML=`
-<h3>Settings</h3>
-<input type="file" accept="image/*" id="bgUpload">
-<button onclick="applyBg()">Set Wallpaper</button>
-<button onclick="createFolder()">Create Folder</button>
-`;
-modal.style.display="flex";
-}
-
-function applyBg(){
-const file=document.getElementById("bgUpload").files[0];
+document.getElementById("bgUpload").addEventListener("change",function(){
+const file=this.files[0];
 const reader=new FileReader();
-reader.onload=e=>{
-setWallpaper(e.target.result);
-modal.style.display="none";
-};
+reader.onload=e=>setWallpaper(e.target.result);
 if(file)reader.readAsDataURL(file);
-}
+});
 
 function createFolder(){
 let name=prompt("Folder Name");
 if(!name)return;
-apps.push({type:"folder",name:name,apps:[]});
+apps.push({name:name,icon:settingsIcon});
 save();
 render();
-modal.style.display="none";
-}
-
-function openAdder(){
-modalContent.innerHTML=`
-<h3>Web App Adder</h3>
-<input id="appName" placeholder="App Name">
-<input id="appURL" placeholder="example.com">
-<button onclick="addApp()">Add App</button>
-`;
-modal.style.display="flex";
 }
 
 function addApp(){
@@ -330,8 +322,8 @@ location.reload();
 if(apps.length===0){
 apps=[
 {name:"Chrome",url:"https://google.com",icon:"https://cdn.jim-nielsen.com/ios/512/chrome-web-browser-by-google-2016-01-25.png?rf=512"},
-{name:"Web App Adder",type:"adder",action:openAdder},
-{name:"Settings",icon:settingsIcon,action:openSettings}
+{name:"Web App Adder",type:"adder"},
+{name:"Settings",icon:settingsIcon}
 ];
 save();
 }
