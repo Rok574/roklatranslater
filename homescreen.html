@@ -3,7 +3,6 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>iOS 18 Web OS</title>
-
 <style>
 *{
   margin:0;
@@ -13,7 +12,6 @@
   user-select:none;
   -webkit-touch-callout:none;
 }
-
 body{
   font-family:-apple-system,BlinkMacSystemFont;
   overflow:hidden;
@@ -21,7 +19,6 @@ body{
   background-position:center;
   background-repeat:no-repeat;
 }
-
 .home{
   width:100vw;
   height:100vh;
@@ -31,18 +28,14 @@ body{
   grid-auto-rows:110px;
   gap:28px 18px;
 }
-
 .app{
   text-align:center;
   position:relative;
   transition:transform .15s ease;
 }
-
 .app.dragging{
-  transform:scale(1.1);
-  z-index:999;
+  opacity:0.5;
 }
-
 .app img{
   width:68px;
   height:68px;
@@ -50,7 +43,6 @@ body{
   pointer-events:none;
   box-shadow:0 10px 25px rgba(0,0,0,.35);
 }
-
 .app span{
   font-size:13px;
   color:white;
@@ -58,7 +50,6 @@ body{
   margin-top:6px;
   display:block;
 }
-
 .delete-btn{
   position:absolute;
   top:-8px;
@@ -73,11 +64,9 @@ body{
   justify-content:center;
   font-size:13px;
 }
-
 .edit-mode .delete-btn{
   display:flex;
 }
-
 .done-btn{
   position:fixed;
   top:55px;
@@ -88,11 +77,9 @@ body{
   font-weight:600;
   display:none;
 }
-
 .edit-mode .done-btn{
   display:block;
 }
-
 .window{
   position:fixed;
   top:0;
@@ -103,7 +90,6 @@ body{
   display:none;
   flex-direction:column;
 }
-
 .window header{
   height:55px;
   display:flex;
@@ -113,11 +99,9 @@ body{
   font-weight:600;
   border-bottom:1px solid #ddd;
 }
-
 .settings-content{
   padding:20px;
 }
-
 .settings-content button{
   padding:12px;
   width:100%;
@@ -127,7 +111,6 @@ body{
   margin-bottom:12px;
   font-weight:600;
 }
-
 .settings-content input{
   width:100%;
   padding:12px;
@@ -161,155 +144,143 @@ Settings
 </div>
 
 <script>
-let apps=[];
-let editMode=false;
-let dragIndex=null;
+let apps = [];
+let editMode = false;
+let dragSrcIndex = null;
 
 /* LOAD STORAGE */
-
-if(localStorage.getItem("apps")){
-  apps=JSON.parse(localStorage.getItem("apps"));
-}else{
-  apps=[
-    {name:"Settings",icon:"/mnt/data/07627759-FA8D-4273-BADF-819BAAB35097.png",type:"settings",system:true}
+if (localStorage.getItem("apps")) {
+  apps = JSON.parse(localStorage.getItem("apps"));
+} else {
+  apps = [
+    { name: "Settings", icon: "/mnt/data/07627759-FA8D-4273-BADF-819BAAB35097.png", type: "settings", system: true }
   ];
 }
 
-if(localStorage.getItem("wallpaper")){
-  document.body.style.backgroundImage="url('"+localStorage.getItem("wallpaper")+"')";
-}else{
-  document.body.style.backgroundImage="url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqbDxP4DYF4o2HgMeEuMvponVEvINt1FrCaMX8r5HOCmk9eIwBQP7YpJI&s=10')";
+if (localStorage.getItem("wallpaper")) {
+  document.body.style.backgroundImage = "url('" + localStorage.getItem("wallpaper") + "')";
+} else {
+  document.body.style.backgroundImage = "url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqbDxP4DYF4o2HgMeEuMvponVEvINt1FrCaMX8r5HOCmk9eIwBQP7YpJI&s=10')";
 }
 
 /* RENDER */
-
-function render(){
-  localStorage.setItem("apps",JSON.stringify(apps));
-  const home=document.getElementById("home");
-  home.innerHTML="";
-  apps.forEach((app,i)=>{
-    home.appendChild(createApp(app,i));
+function render() {
+  localStorage.setItem("apps", JSON.stringify(apps));
+  const home = document.getElementById("home");
+  home.innerHTML = "";
+  apps.forEach((app, i) => {
+    home.appendChild(createApp(app, i));
   });
 }
 
-function createApp(app,index){
-  const div=document.createElement("div");
-  div.className="app";
+function createApp(app, index) {
+  const div = document.createElement("div");
+  div.className = "app";
+  div.draggable = editMode;
 
-  if(!app.system){
-    const del=document.createElement("div");
-    del.className="delete-btn";
-    del.innerText="×";
-    del.onclick=(e)=>{
+  if (!app.system) {
+    const del = document.createElement("div");
+    del.className = "delete-btn";
+    del.innerText = "×";
+    del.onclick = (e) => {
       e.stopPropagation();
-      deleteApp(index);
+      apps.splice(index, 1);
+      render();
     };
     div.appendChild(del);
   }
 
-  div.innerHTML+=`
+  div.innerHTML += `
     <img src="${app.icon}">
     <span>${app.name}</span>
   `;
 
-  let holdTimer;
-  let moved=false;
-
-  div.addEventListener("touchstart",()=>{
-    moved=false;
-    holdTimer=setTimeout(()=>enterEdit(),500);
+  /* CLICK / HOLD */
+  let holdTimer, moved = false;
+  div.addEventListener("touchstart", () => {
+    moved = false;
+    holdTimer = setTimeout(() => enterEdit(), 500);
   });
-
-  div.addEventListener("touchmove",()=>{
-    moved=true;
+  div.addEventListener("touchmove", () => {
+    moved = true;
     clearTimeout(holdTimer);
   });
-
-  div.addEventListener("touchend",()=>{
+  div.addEventListener("touchend", () => {
     clearTimeout(holdTimer);
-    if(!editMode && !moved){
-      openApp(app);
-    }
+    if (!editMode && !moved) openApp(app);
   });
-
-  div.addEventListener("mousedown",()=>{
-    holdTimer=setTimeout(()=>enterEdit(),500);
+  div.addEventListener("mousedown", () => {
+    holdTimer = setTimeout(() => enterEdit(), 500);
   });
-
-  div.addEventListener("mouseup",()=>{
+  div.addEventListener("mouseup", () => {
     clearTimeout(holdTimer);
-    if(!editMode){
-      openApp(app);
-    }
+    if (!editMode) openApp(app);
   });
 
-  if(editMode){
-    div.draggable=true;
-    div.addEventListener("dragstart",()=>dragIndex=index);
-    div.addEventListener("dragover",e=>e.preventDefault());
-    div.addEventListener("drop",()=>{
-      if(dragIndex===null) return;
-      const temp=apps[dragIndex];
-      apps.splice(dragIndex,1);
-      apps.splice(index,0,temp);
-      dragIndex=null;
-      render();
-    });
-  }
+  /* DRAG & DROP */
+  div.addEventListener("dragstart", () => {
+    dragSrcIndex = index;
+    div.classList.add("dragging");
+  });
+  div.addEventListener("dragend", () => {
+    div.classList.remove("dragging");
+  });
+  div.addEventListener("dragover", (e) => e.preventDefault());
+  div.addEventListener("drop", () => {
+    if (dragSrcIndex === null || dragSrcIndex === index) return;
+    const movedApp = apps.splice(dragSrcIndex, 1)[0];
+    apps.splice(index, 0, movedApp);
+    dragSrcIndex = null;
+    render();
+  });
 
   return div;
 }
 
-function deleteApp(i){
-  if(apps[i].system) return;
-  apps.splice(i,1);
-  render();
-}
-
-function enterEdit(){
-  editMode=true;
+function enterEdit() {
+  editMode = true;
   document.body.classList.add("edit-mode");
   render();
 }
 
-function exitEdit(){
-  editMode=false;
+function exitEdit() {
+  editMode = false;
   document.body.classList.remove("edit-mode");
   render();
 }
 
-function openApp(app){
-  if(app.type==="settings"){
-    document.getElementById("settingsWin").style.display="flex";
-  }else{
-    window.open(app.url,"_blank");
+function openApp(app) {
+  if (app.type === "settings") {
+    document.getElementById("settingsWin").style.display = "flex";
+  } else {
+    window.open(app.url, "_blank");
   }
 }
 
-function closeSettings(){
-  document.getElementById("settingsWin").style.display="none";
+function closeSettings() {
+  document.getElementById("settingsWin").style.display = "none";
 }
 
-function setWallpaper(){
-  const file=document.getElementById("wallUpload").files[0];
-  const reader=new FileReader();
-  reader.onload=e=>{
-    document.body.style.backgroundImage="url('"+e.target.result+"')";
-    localStorage.setItem("wallpaper",e.target.result);
+function setWallpaper() {
+  const file = document.getElementById("wallUpload").files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.body.style.backgroundImage = "url('" + e.target.result + "')";
+    localStorage.setItem("wallpaper", e.target.result);
   };
   reader.readAsDataURL(file);
 }
 
-async function addWebApp(){
-  let link=document.getElementById("webLink").value.trim();
-  if(!link.startsWith("http")) link="https://"+link;
+function addWebApp() {
+  let link = document.getElementById("webLink").value.trim();
+  if (!link) return;
+  if (!link.startsWith("http")) link = "https://" + link;
 
-  const name=prompt("App name?");
-  if(!name) return;
+  const name = prompt("App name?");
+  if (!name) return;
 
-  const icon="https://www.google.com/s2/favicons?sz=128&domain="+link;
-
-  apps.push({name:name,icon:icon,url:link});
+  const icon = "https://www.google.com/s2/favicons?sz=128&domain=" + new URL(link).hostname;
+  apps.push({ name, icon, url: link });
   render();
   closeSettings();
 }
