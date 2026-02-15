@@ -177,9 +177,6 @@ const dock = document.getElementById("dock");
 function getAllApps() {
   return dockApps.concat(homeApps);
 }
-function findApp(id) {
-  return getAllApps().find(a => (a.id || a.url || a.name) === id);
-}
 function createAppEl(app) {
   const el = document.createElement("div");
   el.className = "app";
@@ -336,14 +333,32 @@ function exitEditMode() {
   document.getElementById("done").style.display = "none";
 }
 function syncOrder() {
-  dockApps = Array.from(dock.children).map(el => findApp(el.dataset.id));
-  homeApps = [];
+  // Build a map from ALL current apps (before we reassign anything)
+  const allApps = getAllApps();
+  const appMap = new Map();
+  allApps.forEach(app => {
+    const key = app.id || app.url || app.name;
+    if (key) appMap.set(key, app);
+  });
+
+  // Rebuild dockApps from current dock DOM
+  const newDockApps = Array.from(dock.children)
+    .map(el => appMap.get(el.dataset.id))
+    .filter(Boolean);
+
+  // Rebuild homeApps from all pages
+  const newHomeApps = [];
   Array.from(home.children).forEach(page => {
     Array.from(page.children).forEach(el => {
-      const found = findApp(el.dataset.id);
-      if (found) homeApps.push(found);
+      const found = appMap.get(el.dataset.id);
+      if (found) newHomeApps.push(found);
     });
   });
+
+  // Now assign the new arrays
+  dockApps = newDockApps;
+  homeApps = newHomeApps;
+
   localStorage.setItem("dockApps", JSON.stringify(dockApps));
   localStorage.setItem("homeApps", JSON.stringify(homeApps));
 }
@@ -429,7 +444,7 @@ function saveCurrentNote() {
     localStorage.setItem('notesData', JSON.stringify(notesData));
   }
 }
-// Calculator (unchanged)
+// Calculator
 let current = "0", operator = null, stored = null;
 const disp = document.getElementById("calcDisplay");
 function update(){ disp.textContent = current; }
@@ -447,7 +462,7 @@ function equals(){
   if(operator==="/") current=b?""+(a/b):"0";
   update();
 }
-// Browser & favorites (unchanged)
+// Browser & favorites
 let favorites = JSON.parse(localStorage.favorites || "[]");
 function renderFavorites() {
   const list = document.getElementById("favorites");
@@ -473,7 +488,7 @@ function addFavorite() {
   renderFavorites();
 }
 renderFavorites();
-// Custom Web App with favicon auto-fetch
+// Custom Web App
 function addCustomWebApp() {
   const name = document.getElementById("webappName").value.trim();
   const urlInput = document.getElementById("webappUrl").value.trim();
@@ -528,7 +543,7 @@ function setWallpaper(input) {
 function adjustDockSize() {
   const maxDock = deviceMode === 'ipad' ? 6 : 4;
   if (dockApps.length > maxDock) {
-    homeApps = dockApps.slice(maxDock).concat(homeApps);
+    homeApps = homeApps.concat(dockApps.slice(maxDock)); // append to end instead of prepend
     dockApps = dockApps.slice(0, maxDock);
     localStorage.setItem("dockApps", JSON.stringify(dockApps));
     localStorage.setItem("homeApps", JSON.stringify(homeApps));
