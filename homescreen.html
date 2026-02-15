@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>iOS 18 Home</title>
+<title>RoksVOD</title>
+<meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<link rel="apple-touch-icon" href="https://preview.redd.it/invisible-profile-picture-used-in-the-no-pfp-channel-vid-v0-yurt8ly6ezl81.png?auto=webp&s=7363ccf88f50b31c00ff9a9c7d3b974dc0fb82eb">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
 <style>
@@ -144,7 +147,7 @@ button { padding:14px; border-radius:14px; border:none; background:#0a84ff; colo
     <div class="group">
       <h3>Add Web App</h3>
       <input id="webappName" placeholder="App Name" style="margin:8px 16px;">
-      <input id="webappUrl" placeholder="https://youtube.com" style="margin:8px 16px;">
+      <input id="webappUrl" placeholder="https://example.com" style="margin:8px 16px;">
       <input id="webappIcon" type="file" accept="image/*" style="margin:8px 16px;">
       <button onclick="addCustomWebApp()" style="margin:12px 16px;">Add to Home Screen</button>
     </div>
@@ -186,7 +189,7 @@ function createAppEl(app) {
   if (app.isCustom) el.classList.add("is-custom");
   el.draggable = true;
   el.dataset.id = app.id || app.url || app.name;
-  el.innerHTML = `<img src="${app.icon}"><span>${app.name}</span>`;
+  el.innerHTML = `<img src="${app.icon}"><center><span>${app.name}</span></center>`;
   if (app.isCustom) {
     const x = document.createElement("div");
     x.className = "delete-x";
