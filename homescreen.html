@@ -1,28 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>iOS Home</title>
-<link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
 
 <style>
-:root{
-  --sf:"SF Pro Display",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
-  --radius-app:18px;
-  --radius-dock:32px;
-}
-
-*{
+body{
   margin:0;
-  padding:0;
-  box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
-}
-
-html,body{
-  height:100%;
-  font-family:var(--sf);
+  font-family:-apple-system,system-ui;
   background:#000;
   color:white;
   overflow:hidden;
@@ -36,132 +21,66 @@ html,body{
 }
 
 #home{
-  position:relative;
-  z-index:1;
-  height:calc(100vh - 220px);
-  display:flex;
-  overflow-x:auto;
-  scroll-snap-type:x mandatory;
-  scroll-behavior:smooth;
-  -webkit-overflow-scrolling:touch;
-}
-
-.page{
-  flex:0 0 100%;
-  height:100%;
+  position:absolute;
+  inset:0;
   padding:20px;
   display:grid;
-  grid-template-columns:repeat(var(--cols),1fr);
-  gap:var(--gap);
+  grid-template-columns:repeat(4,1fr);
+  gap:22px;
   align-content:start;
-  overflow-y:auto;
-  scroll-snap-align:start;
+  z-index:1;
 }
-
-#dock{
-  position:fixed;
-  bottom:env(safe-area-inset-bottom,12px);
-  left:50%;
-  transform:translateX(-50%);
-  z-index:10;
-  background:rgba(40,40,45,0.95);
-  border-radius:var(--radius-dock);
-  display:flex;
-  justify-content:center;
-}
-
-body.iphone #dock{width:min(420px,calc(100% - 40px));padding:14px 20px;gap:24px}
-body.ipad #dock{width:min(620px,calc(100% - 48px));padding:18px 28px;gap:32px}
 
 .app{
   text-align:center;
   cursor:pointer;
-  position:relative;
-  transition:transform .15s;
 }
 
-.app:active{transform:scale(.92)}
-
-body.iphone .app img{width:64px;height:64px;border-radius:14px}
-body.ipad .app img{width:72px;height:72px;border-radius:18px}
+.app img{
+  width:64px;
+  height:64px;
+  border-radius:14px;
+}
 
 .app span{
   display:block;
-  margin-top:6px;
   font-size:12px;
-}
-
-.delete-x{
-  position:absolute;
-  top:-8px;
-  right:-8px;
-  width:24px;
-  height:24px;
-  background:#ff3b30;
-  border-radius:50%;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-}
-
-body.edit-mode .app.is-custom .delete-x{display:flex}
-body.edit-mode .app{animation:wiggle .8s infinite}
-
-@keyframes wiggle{
-  0%,100%{transform:rotate(-3deg)}
-  25%{transform:rotate(3deg)}
-  50%{transform:rotate(-2deg)}
-  75%{transform:rotate(2deg)}
-}
-
-#done{
-  position:fixed;
-  top:24px;
-  right:24px;
-  background:#007aff;
-  padding:7px 20px;
-  border-radius:30px;
-  display:none;
-  cursor:pointer;
+  margin-top:6px;
 }
 
 .window{
   position:fixed;
   inset:0;
-  z-index:20;
   background:#000;
   display:none;
   flex-direction:column;
+  z-index:10;
 }
 
 .header{
-  height:54px;
-  display:flex;
-  align-items:center;
-  padding:0 16px;
+  padding:16px;
   border-bottom:1px solid #222;
-  font-size:17px;
   font-weight:600;
+  display:flex;
+  justify-content:space-between;
 }
 
-textarea,input{
-  width:100%;
+input,textarea{
   background:#111;
   color:white;
   border:1px solid #222;
-  border-radius:12px;
+  border-radius:10px;
   padding:12px;
-  font-size:17px;
+  width:100%;
+  margin-bottom:10px;
 }
+
 button{
   background:#007aff;
-  color:white;
   border:none;
-  border-radius:12px;
-  padding:14px;
-  font-size:17px;
-  margin-top:8px;
+  color:white;
+  padding:12px;
+  border-radius:10px;
 }
 </style>
 </head>
@@ -169,122 +88,225 @@ button{
 
 <div id="wallpaper"></div>
 <div id="home"></div>
-<div id="dock"></div>
-<div id="done" onclick="exitEditMode()">Done</div>
+
+<!-- SETTINGS -->
+<div id="settings" class="window">
+  <div class="header">
+    <div>Settings</div>
+    <div onclick="goHome()" style="color:#007aff;cursor:pointer">Done</div>
+  </div>
+  <div style="padding:16px">
+    <h3>Add Web App</h3>
+    <input id="webName" placeholder="App Name">
+    <input id="webUrl" placeholder="example.com">
+    <input id="webIcon" type="file" accept="image/*">
+    <button onclick="addWebApp()">Add to Home Screen</button>
+  </div>
+</div>
+
+<!-- NOTES -->
+<div id="notes" class="window">
+  <div class="header">
+    <div>Notes</div>
+    <div onclick="newNote()" style="color:#007aff;cursor:pointer">New</div>
+  </div>
+  <div id="notesList" style="padding:16px;overflow:auto;flex:1"></div>
+</div>
+
+<div id="editor" class="window">
+  <div class="header">
+    <div onclick="closeEditor()" style="color:#007aff;cursor:pointer">Back</div>
+    <div onclick="deleteNote()" style="color:#ff3b30;cursor:pointer">Delete</div>
+  </div>
+  <div style="padding:16px;flex:1">
+    <input id="noteTitle" placeholder="Title">
+    <textarea id="noteContent" style="height:60vh"></textarea>
+  </div>
+</div>
+
+<!-- BROWSER -->
+<div id="browser" class="window">
+  <div class="header">
+    <div>Browser</div>
+    <div onclick="goHome()" style="color:#007aff;cursor:pointer">Done</div>
+  </div>
+  <div style="padding:16px">
+    <input id="browserUrl" placeholder="example.com">
+    <button onclick="openUrl()">Go</button>
+    <h3>Favorites</h3>
+    <input id="favInput" placeholder="example.com">
+    <button onclick="addFavorite()">Add Favorite</button>
+    <div id="favList"></div>
+  </div>
+</div>
 
 <script>
-let deviceMode = localStorage.getItem('deviceMode') || 'iphone';
-let dockLimit = deviceMode==='ipad'?6:4;
-
-document.body.classList.add(deviceMode);
-
-let apps = JSON.parse(localStorage.getItem('apps')) || [
-  {name:"Notes",id:"notes",icon:"https://i.imgur.com/9D6V4Xx.png",isCustom:false,dock:true},
-  {name:"Browser",id:"browser",icon:"https://i.imgur.com/XV3Txqf.png",isCustom:false,dock:false},
-  {name:"Settings",id:"settings",icon:"https://i.imgur.com/crghH6U.png",isCustom:false,dock:false}
+let apps = JSON.parse(localStorage.getItem("apps")) || [
+  {name:"Notes",type:"notes",icon:"https://i.imgur.com/9D6V4Xx.png"},
+  {name:"Browser",type:"browser",icon:"https://i.imgur.com/XV3Txqf.png"},
+  {name:"Settings",type:"settings",icon:"https://i.imgur.com/crghH6U.png"}
 ];
 
-let editMode=false;
-const homeEl=document.getElementById('home');
-const dockEl=document.getElementById('dock');
-
 function saveApps(){
-  localStorage.setItem('apps',JSON.stringify(apps));
-}
-
-function createAppEl(app){
-  const el=document.createElement('div');
-  el.className='app';
-  if(app.isCustom)el.classList.add('is-custom');
-  el.draggable=true;
-  el.dataset.id=app.id||app.url||app.name;
-  el.innerHTML=`<img src="${app.icon}"><span>${app.name}</span>`;
-
-  if(app.isCustom){
-    const x=document.createElement('div');
-    x.className='delete-x';
-    x.textContent='×';
-    x.onclick=e=>{
-      e.stopPropagation();
-      if(!confirm(`Delete "${app.name}"?`))return;
-      apps=apps.filter(a=>
-        (a.id||a.url||a.name)!==(app.id||app.url||app.name)
-      );
-      saveApps();
-      render();
-    };
-    el.appendChild(x);
-  }
-
-  el.onclick=()=>{
-    if(editMode)return;
-    if(app.url)window.open(app.url,'_blank');
-  };
-
-  el.addEventListener('dragstart',e=>{
-    if(!editMode){e.preventDefault();return;}
-    el.classList.add('dragging');
-  });
-
-  el.addEventListener('dragend',()=>{
-    el.classList.remove('dragging');
-    saveApps();
-  });
-
-  return el;
+  localStorage.setItem("apps",JSON.stringify(apps));
 }
 
 function render(){
-  dockEl.innerHTML='';
-  homeEl.innerHTML='';
-
-  const dockApps=apps.filter(a=>a.dock).slice(0,dockLimit);
-  dockApps.forEach(a=>dockEl.appendChild(createAppEl(a)));
-
-  const homeApps=apps.filter(a=>!a.dock);
-  const page=document.createElement('div');
-  page.className='page';
-  page.style.setProperty('--cols',4);
-  page.style.setProperty('--gap','22px');
-  homeApps.forEach(a=>page.appendChild(createAppEl(a)));
-  homeEl.appendChild(page);
-}
-
-function enterEditMode(){
-  editMode=true;
-  document.body.classList.add('edit-mode');
-  document.getElementById('done').style.display='block';
-}
-function exitEditMode(){
-  editMode=false;
-  document.body.classList.remove('edit-mode');
-  document.getElementById('done').style.display='none';
-  saveApps();
-  render();
-}
-
-function addCustomWebApp(name,url,iconData){
-  if(!url.startsWith('http://')&&!url.startsWith('https://')){
-    url='https://'+url;
-  }
-  apps.push({
-    name:name,
-    url:url,
-    icon:iconData,
-    isCustom:true,
-    dock:false
+  const home=document.getElementById("home");
+  home.innerHTML="";
+  apps.forEach(app=>{
+    const div=document.createElement("div");
+    div.className="app";
+    div.innerHTML=`<img src="${app.icon}"><span>${app.name}</span>`;
+    div.onclick=()=>openApp(app);
+    home.appendChild(div);
   });
-  saveApps();
-  render();
-  alert('Added to Home Screen');
 }
 
-const savedWallpaper=localStorage.getItem('wallpaper');
-if(savedWallpaper){
-  document.getElementById('wallpaper').style.backgroundImage=`url(${savedWallpaper})`;
+function openApp(app){
+  if(app.url){
+    window.open(app.url,"_blank");
+    return;
+  }
+  document.getElementById(app.type).style.display="flex";
+}
+
+function goHome(){
+  document.querySelectorAll(".window").forEach(w=>w.style.display="none");
+}
+
+/* WEB APP FIX */
+function addWebApp(){
+  let name=document.getElementById("webName").value.trim();
+  let url=document.getElementById("webUrl").value.trim();
+  let file=document.getElementById("webIcon").files[0];
+
+  if(!name||!url||!file){
+    alert("Fill all fields");
+    return;
+  }
+
+  if(!url.startsWith("http://")&&!url.startsWith("https://")){
+    url="https://"+url;
+  }
+
+  const reader=new FileReader();
+  reader.onload=e=>{
+    apps.push({
+      name:name,
+      url:url,
+      icon:e.target.result
+    });
+
+    saveApps();
+    render();
+
+    document.getElementById("webName").value="";
+    document.getElementById("webUrl").value="";
+    document.getElementById("webIcon").value="";
+
+    alert("Added to Home Screen");
+    goHome();
+  };
+  reader.readAsDataURL(file);
+}
+
+/* NOTES FIX */
+let notes=JSON.parse(localStorage.getItem("notes"))||[];
+let current=null;
+
+function saveNotes(){
+  localStorage.setItem("notes",JSON.stringify(notes));
+}
+
+function renderNotes(){
+  const list=document.getElementById("notesList");
+  list.innerHTML="";
+  notes.forEach(n=>{
+    const div=document.createElement("div");
+    div.style.padding="10px 0";
+    div.style.borderBottom="1px solid #222";
+    div.textContent=n.title||"New Note";
+    div.onclick=()=>openNote(n.id);
+    list.appendChild(div);
+  });
+}
+
+function newNote(){
+  const note={id:Date.now(),title:"",content:""};
+  notes.unshift(note);
+  saveNotes();
+  openNote(note.id);
+}
+
+function openNote(id){
+  current=id;
+  const note=notes.find(n=>n.id===id);
+  document.getElementById("noteTitle").value=note.title;
+  document.getElementById("noteContent").value=note.content;
+  document.getElementById("notes").style.display="none";
+  document.getElementById("editor").style.display="flex";
+}
+
+function closeEditor(){
+  const note=notes.find(n=>n.id===current);
+  note.title=document.getElementById("noteTitle").value;
+  note.content=document.getElementById("noteContent").value;
+  saveNotes();
+  renderNotes();
+  goHome();
+}
+
+function deleteNote(){
+  notes=notes.filter(n=>n.id!==current);
+  saveNotes();
+  renderNotes();
+  goHome();
+}
+
+/* FAVORITES FIX */
+let favorites=JSON.parse(localStorage.getItem("favorites"))||[];
+
+function saveFav(){
+  localStorage.setItem("favorites",JSON.stringify(favorites));
+}
+
+function renderFav(){
+  const list=document.getElementById("favList");
+  list.innerHTML="";
+  favorites.forEach(url=>{
+    const div=document.createElement("div");
+    div.style.padding="6px 0";
+    div.textContent=url;
+    div.onclick=()=>window.open(url,"_blank");
+    list.appendChild(div);
+  });
+}
+
+function addFavorite(){
+  let url=document.getElementById("favInput").value.trim();
+  if(!url)return;
+  if(!url.startsWith("http://")&&!url.startsWith("https://")){
+    url="https://"+url;
+  }
+  favorites.push(url);
+  saveFav();
+  renderFav();
+  document.getElementById("favInput").value="";
+}
+
+function openUrl(){
+  let url=document.getElementById("browserUrl").value.trim();
+  if(!url)return;
+  if(!url.startsWith("http://")&&!url.startsWith("https://")){
+    url="https://"+url;
+  }
+  window.open(url,"_blank");
 }
 
 render();
+renderNotes();
+renderFav();
 </script>
 </body>
 </html>
