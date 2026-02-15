@@ -147,22 +147,39 @@ function setDevice(mode) {
   deviceMode = mode;
   document.getElementById('deviceChooser').style.display = 'none';
   applyLayout();
+  adjustDockSize();
   render();
 }
 function applyLayout() {
   document.body.classList.remove('iphone','ipad');
   document.body.classList.add(deviceMode === 'ipad' ? 'ipad' : 'iphone');
 }
-let apps = JSON.parse(localStorage.getItem("apps")) || [
+const initialApps = [
   { name: "Notes", id: "notes", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRC4wjEB3rsNICYcrehZUz4hvDbHg4LhMh_Xw&s", isCustom: false },
   { name: "Calculator", id: "calculator", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8Je98ZqXhgWmbiohpPpuBO2oNgajOWG3mHw&s", isCustom: false },
   { name: "Chrome", id: "browser", icon: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/e6/16/cd/e616cd30-09be-220e-fc18-d1ffea0ab74e/Placeholder.mill/200x200bb-75.webp", isCustom: false },
   { name: "Settings", id: "settings", icon: "https://i.imgur.com/crghH6U.png", isCustom: false }
 ];
+let dockApps = JSON.parse(localStorage.getItem("dockApps"));
+let homeApps = JSON.parse(localStorage.getItem("homeApps"));
+if (!dockApps || !homeApps) {
+  const legacyApps = JSON.parse(localStorage.getItem("apps")) || initialApps;
+  const maxDock = deviceMode === 'ipad' ? 6 : 4;
+  dockApps = legacyApps.slice(0, maxDock);
+  homeApps = legacyApps.slice(maxDock);
+  localStorage.setItem("dockApps", JSON.stringify(dockApps));
+  localStorage.setItem("homeApps", JSON.stringify(homeApps));
+}
 let editMode = false;
 let pressTimer;
 const home = document.getElementById("home");
 const dock = document.getElementById("dock");
+function getAllApps() {
+  return dockApps.concat(homeApps);
+}
+function findApp(id) {
+  return getAllApps().find(a => (a.id || a.url || a.name) === id);
+}
 function createAppEl(app) {
   const el = document.createElement("div");
   el.className = "app";
@@ -174,7 +191,16 @@ function createAppEl(app) {
     const x = document.createElement("div");
     x.className = "delete-x";
     x.textContent = "×";
-    x.onclick = e => { e.stopImmediatePropagation(); if(confirm(`Delete "${app.name}"?`)) { apps = apps.filter(a=>a!==app); localStorage.setItem("apps",JSON.stringify(apps)); render(); } };
+    x.onclick = e => { 
+      e.stopImmediatePropagation(); 
+      if(confirm(`Delete "${app.name}"?`)) { 
+        dockApps = dockApps.filter(a => a !== app); 
+        homeApps = homeApps.filter(a => a !== app); 
+        localStorage.setItem("dockApps", JSON.stringify(dockApps)); 
+        localStorage.setItem("homeApps", JSON.stringify(homeApps)); 
+        render(); 
+      } 
+    };
     el.appendChild(x);
   }
   el.onclick = () => {
@@ -204,15 +230,10 @@ function render() {
 }
 function renderDock() {
   dock.innerHTML = "";
-  const dockCount = deviceMode === 'ipad' ? 6 : 4;
-  for (let i = 0; i < dockCount && i < apps.length; i++) {
-    dock.appendChild(createAppEl(apps[i]));
-  }
+  dockApps.forEach(app => dock.appendChild(createAppEl(app)));
 }
 function renderPages() {
   home.innerHTML = "";
-  const dockCount = deviceMode === 'ipad' ? 6 : 4;
-  const homeApps = apps.slice(dockCount);
   const cols = deviceMode === 'ipad' ? 6 : 4;
   const gap = deviceMode === 'ipad' ? '28px' : '22px';
   const maxPerPage = cols * 5;
@@ -284,13 +305,15 @@ dock.addEventListener("dragover", e => {
     const last = dock.lastElementChild;
     if (last) {
       let targetPage = home.lastElementChild;
-      if (!targetPage) {
+      if (!targetPage || targetPage.children.length >= (deviceMode === 'ipad' ? 30 : 20)) {
         targetPage = document.createElement('div');
         targetPage.className = 'page';
         targetPage.style.setProperty('--cols', deviceMode === 'ipad' ? 6 : 4);
         targetPage.style.setProperty('--gap', deviceMode === 'ipad' ? '28px' : '22px');
         home.appendChild(targetPage);
         createPageDots(home.children.length);
+        targetPage.addEventListener('dragover', handlePageDragOver);
+        targetPage.addEventListener('drop', handlePageDrop);
       }
       targetPage.appendChild(last);
     }
@@ -313,19 +336,16 @@ function exitEditMode() {
   document.getElementById("done").style.display = "none";
 }
 function syncOrder() {
-  const newApps = [];
-  Array.from(dock.children).forEach(el => {
-    const found = apps.find(a => (a.id || a.url || a.name) === el.dataset.id);
-    if (found) newApps.push(found);
-  });
-  Array.from(home.children || []).forEach(page => {
-    Array.from(page.children || []).forEach(el => {
-      const found = apps.find(a => (a.id || a.url || a.name) === el.dataset.id);
-      if (found) newApps.push(found);
+  dockApps = Array.from(dock.children).map(el => findApp(el.dataset.id));
+  homeApps = [];
+  Array.from(home.children).forEach(page => {
+    Array.from(page.children).forEach(el => {
+      const found = findApp(el.dataset.id);
+      if (found) homeApps.push(found);
     });
   });
-  apps = newApps;
-  localStorage.setItem("apps", JSON.stringify(apps));
+  localStorage.setItem("dockApps", JSON.stringify(dockApps));
+  localStorage.setItem("homeApps", JSON.stringify(homeApps));
 }
 function openApp(id) {
   document.querySelectorAll(".window").forEach(w=>w.style.display="none");
@@ -463,8 +483,9 @@ function addCustomWebApp() {
   if (file) {
     const reader = new FileReader();
     reader.onload = e => {
-      apps.push({name, url, icon: e.target.result, isCustom: true});
-      localStorage.setItem("apps", JSON.stringify(apps));
+      const newApp = {name, url, icon: e.target.result, isCustom: true};
+      homeApps.push(newApp);
+      localStorage.setItem("homeApps", JSON.stringify(homeApps));
       render();
       clearCustomInputs();
     };
@@ -475,14 +496,16 @@ function addCustomWebApp() {
     const faviconUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
     const img = new Image();
     img.onload = () => {
-      apps.push({name, url, icon: faviconUrl, isCustom: true});
-      localStorage.setItem("apps", JSON.stringify(apps));
+      const newApp = {name, url, icon: faviconUrl, isCustom: true};
+      homeApps.push(newApp);
+      localStorage.setItem("homeApps", JSON.stringify(homeApps));
       render();
       clearCustomInputs();
     };
     img.onerror = () => {
-      apps.push({name, url, icon: "https://img.icons8.com/ios-filled/100/ffffff/globe.png", isCustom: true});
-      localStorage.setItem("apps", JSON.stringify(apps));
+      const newApp = {name, url, icon: "https://img.icons8.com/ios-filled/100/ffffff/globe.png", isCustom: true};
+      homeApps.push(newApp);
+      localStorage.setItem("homeApps", JSON.stringify(homeApps));
       render();
       clearCustomInputs();
     };
@@ -502,8 +525,18 @@ function setWallpaper(input) {
   };
   r.readAsDataURL(input.files[0]);
 }
+function adjustDockSize() {
+  const maxDock = deviceMode === 'ipad' ? 6 : 4;
+  if (dockApps.length > maxDock) {
+    homeApps = dockApps.slice(maxDock).concat(homeApps);
+    dockApps = dockApps.slice(0, maxDock);
+    localStorage.setItem("dockApps", JSON.stringify(dockApps));
+    localStorage.setItem("homeApps", JSON.stringify(homeApps));
+  }
+}
 if (localStorage.wp) document.getElementById("wallpaper").style.backgroundImage = `url(${localStorage.wp})`;
 applyLayout();
+adjustDockSize();
 render();
 </script>
 </body>
