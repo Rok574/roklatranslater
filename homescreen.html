@@ -61,7 +61,7 @@ button { padding:14px; border-radius:14px; border:none; background:#0a84ff; colo
 .note-item .delete-btn:hover { opacity:1; }
 #notesEditor { display:none; flex-direction:column; flex:1; }
 #noteTitle { border:none; background:transparent; font-size:28px; font-weight:600; padding:20px 20px 10px; color:white; }
-#noteContent { flex:1; padding:0 20px 30px; font-size:17px; line-height:1.5; background:transparent; border:none; resize:none; color:white; }
+#noteContent { flex:1; padding:0 20px 30px; font-size:17px; line-height:1.5; background:transparent; border:none; resize:none; color:white; outline:none; min-height:200px; }
 .calc-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; padding:20px; }
 .calc-grid button { font-size:26px; border-radius:50%; padding:22px; }
 .gray { background:#a5a5a5; color:#000; }
@@ -72,6 +72,11 @@ button { padding:14px; border-radius:14px; border:none; background:#0a84ff; colo
 #deviceChooser h1 { font-size:28px; font-weight:600; }
 #deviceChooser button { background:#0a84ff; color:white; border:none; border-radius:14px; padding:16px 48px; font-size:18px; cursor:pointer; }
 .app span { display:block; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#notesToolbar { padding:10px; background:#1c1c1e; display:flex; gap:10px; }
+#photosControls { padding:10px; display:flex; justify-content:space-around; }
+#photosGallery { flex:1; overflow-y:auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(100px,1fr)); gap:10px; padding:10px; }
+#mediaSelector { display:none; position:fixed; inset:0; background:#000; color:white; flex-direction:column; z-index:20; }
+#mediaGallery { flex:1; overflow-y:auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(100px,1fr)); gap:10px; padding:10px; }
 </style>
 </head>
 <body>
@@ -95,8 +100,18 @@ button { padding:14px; border-radius:14px; border:none; background:#0a84ff; colo
   </div>
   <div id="notesList"></div>
   <div id="notesEditor">
+    <div id="notesToolbar">
+      <button onclick="insertMedia()">Insert Media</button>
+    </div>
     <input id="noteTitle" placeholder="Title" oninput="saveCurrentNote()">
-    <textarea id="noteContent" oninput="saveCurrentNote()"></textarea>
+    <div id="noteContent" contenteditable="true" oninput="saveCurrentNote()"></div>
+  </div>
+  <div id="mediaSelector">
+    <div class="header">
+      <div class="back" onclick="closeMediaSelector()">‹ Cancel</div>
+      <div class="title" style="flex:1;text-align:center;">Select Media</div>
+    </div>
+    <div id="mediaGallery"></div>
   </div>
 </div>
 <div id="calculator" class="window">
@@ -156,7 +171,17 @@ button { padding:14px; border-radius:14px; border:none; background:#0a84ff; colo
     <div class="back" onclick="goHome()">‹ Home</div>
     <div class="title" style="flex:1;text-align:center;">Photos</div>
   </div>
-  <div style="padding:20px; text-align:center; color:#888;">No photos yet.</div>
+  <div id="photosControls">
+    <button onclick="uploadImage()">Upload Image</button>
+    <button onclick="takePhoto()">Take Photo</button>
+    <button onclick="uploadVideo()">Upload Video</button>
+    <button onclick="recordVideo()">Record Video</button>
+  </div>
+  <input id="imageUpload" type="file" accept="image/*" style="display:none;" onchange="addMedia(this.files[0], 'image')">
+  <input id="photoCapture" type="file" accept="image/*" capture="user" style="display:none;" onchange="addMedia(this.files[0], 'image')">
+  <input id="videoUpload" type="file" accept="video/*" style="display:none;" onchange="addMedia(this.files[0], 'video')">
+  <input id="videoCapture" type="file" accept="video/*" capture="camcorder" style="display:none;" onchange="addMedia(this.files[0], 'video')">
+  <div id="photosGallery"></div>
 </div>
 <script>
 let deviceMode = localStorage.getItem('deviceMode');
@@ -386,7 +411,12 @@ function openApp(id) {
     if (id === "notes") {
       document.getElementById('notesEditor').style.display = 'none';
       document.getElementById('notesList').style.display = 'block';
+      const notesBack = document.querySelector('#notes .back');
+      notesBack.textContent = '‹ Home';
+      notesBack.onclick = goHome;
       renderNotesList();
+    } else if (id === "photos") {
+      renderPhotos();
     }
   }
 }
@@ -411,10 +441,12 @@ function renderNotesList() {
   notesData.forEach(note => {
     const div = document.createElement('div');
     div.className = 'note-item';
+    let preview = note.content.replace(/<[^>]+>/g, '').trim();
+    preview = preview.substring(0, 80) + (preview.length > 80 ? '...' : '');
     div.innerHTML = `
       <div class="info">
         <div class="title">${note.title || 'Untitled'}</div>
-        <div class="preview">${note.content ? note.content.substring(0, 80) + '...' : 'Empty note'}</div>
+        <div class="preview">${preview || 'Empty note'}</div>
       </div>
       <div class="delete-btn" onclick="deleteNote(${note.id})">×</div>
     `;
@@ -438,16 +470,27 @@ function openNote(id) {
   if (!note) return;
   document.getElementById('notesList').style.display = 'none';
   document.getElementById('notesEditor').style.display = 'flex';
+  const notesBack = document.querySelector('#notes .back');
+  notesBack.textContent = '‹ Notes';
+  notesBack.onclick = goToNotesList;
   document.getElementById('noteTitle').value = note.title || '';
-  document.getElementById('noteContent').value = note.content || '';
+  document.getElementById('noteContent').innerHTML = note.content || '';
+}
+function goToNotesList() {
+  document.getElementById('notesEditor').style.display = 'none';
+  document.getElementById('notesList').style.display = 'block';
+  const notesBack = document.querySelector('#notes .back');
+  notesBack.textContent = '‹ Home';
+  notesBack.onclick = goHome;
+  currentNoteId = null;
+  renderNotesList();
 }
 function deleteNote(id) {
   if (!confirm("Delete this note?")) return;
   notesData = notesData.filter(n => n.id !== id);
   localStorage.setItem('notesData', JSON.stringify(notesData));
   if (currentNoteId === id) {
-    document.getElementById('notesEditor').style.display = 'none';
-    document.getElementById('notesList').style.display = 'block';
+    goToNotesList();
   }
   renderNotesList();
 }
@@ -456,9 +499,82 @@ function saveCurrentNote() {
   const note = notesData.find(n => n.id === currentNoteId);
   if (note) {
     note.title = document.getElementById('noteTitle').value.trim() || 'Untitled';
-    note.content = document.getElementById('noteContent').value;
+    note.content = document.getElementById('noteContent').innerHTML;
     localStorage.setItem('notesData', JSON.stringify(notesData));
   }
+}
+function insertMedia() {
+  document.getElementById('mediaSelector').style.display = 'flex';
+  const gallery = document.getElementById('mediaGallery');
+  gallery.innerHTML = '';
+  photosData.forEach(media => {
+    const el = document.createElement('div');
+    el.style.cursor = 'pointer';
+    if (media.type === 'image') {
+      const img = document.createElement('img');
+      img.src = media.data;
+      img.style.width = '100%';
+      el.appendChild(img);
+      el.onclick = () => {
+        document.execCommand('insertHTML', false, `<img src="${media.data}" style="max-width:100%; display:block; margin:10px 0;">`);
+        closeMediaSelector();
+        saveCurrentNote();
+      };
+    } else {
+      const vid = document.createElement('video');
+      vid.src = media.data;
+      vid.style.width = '100%';
+      el.appendChild(vid);
+      el.onclick = () => {
+        document.execCommand('insertHTML', false, `<video src="${media.data}" controls style="max-width:100%; display:block; margin:10px 0;"></video>`);
+        closeMediaSelector();
+        saveCurrentNote();
+      };
+    }
+    gallery.appendChild(el);
+  });
+}
+function closeMediaSelector() {
+  document.getElementById('mediaSelector').style.display = 'none';
+}
+// Photos
+let photosData = JSON.parse(localStorage.getItem('photosData')) || [];
+function renderPhotos() {
+  const gallery = document.getElementById('photosGallery');
+  gallery.innerHTML = '';
+  photosData.forEach(media => {
+    const el = document.createElement('div');
+    if (media.type === 'image') {
+      const img = document.createElement('img');
+      img.src = media.data;
+      img.style.width = '100%';
+      el.appendChild(img);
+    } else {
+      const vid = document.createElement('video');
+      vid.src = media.data;
+      vid.controls = true;
+      vid.style.width = '100%';
+      el.appendChild(vid);
+    }
+    gallery.appendChild(el);
+  });
+  if (photosData.length === 0) {
+    gallery.innerHTML = '<div style="padding:20px; text-align:center; color:#888;">No photos or videos yet.</div>';
+  }
+}
+function uploadImage() { document.getElementById('imageUpload').click(); }
+function takePhoto() { document.getElementById('photoCapture').click(); }
+function uploadVideo() { document.getElementById('videoUpload').click(); }
+function recordVideo() { document.getElementById('videoCapture').click(); }
+function addMedia(file, type) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    photosData.push({type: type === 'image' ? 'image' : 'video', data: e.target.result});
+    localStorage.setItem('photosData', JSON.stringify(photosData));
+    renderPhotos();
+  };
+  reader.readAsDataURL(file);
 }
 // Calculator
 let current = "0", operator = null, stored = null;
