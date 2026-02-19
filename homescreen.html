@@ -151,6 +151,13 @@ button { padding:14px; border-radius:14px; border:none; background:#0a84ff; colo
     </div>
   </div>
 </div>
+<div id="photos" class="window">
+  <div class="header">
+    <div class="back" onclick="goHome()">‹ Home</div>
+    <div class="title" style="flex:1;text-align:center;">Photos</div>
+  </div>
+  <div style="padding:20px; text-align:center; color:#888;">No photos yet.</div>
+</div>
 <script>
 let deviceMode = localStorage.getItem('deviceMode');
 if (!deviceMode) document.getElementById('deviceChooser').style.display = 'flex';
@@ -170,7 +177,8 @@ const initialApps = [
   { name: "Notes", id: "notes", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRC4wjEB3rsNICYcrehZUz4hvDbHg4LhMh_Xw&s", isCustom: false },
   { name: "Calculator", id: "calculator", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8Je98ZqXhgWmbiohpPpuBO2oNgajOWG3mHw&s", isCustom: false },
   { name: "Chrome", id: "browser", icon: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/e6/16/cd/e616cd30-09be-220e-fc18-d1ffea0ab74e/Placeholder.mill/200x200bb-75.webp", isCustom: false },
-  { name: "Settings", id: "settings", icon: "https://i.imgur.com/crghH6U.png", isCustom: false }
+  { name: "Settings", id: "settings", icon: "https://i.imgur.com/crghH6U.png", isCustom: false },
+  { name: "Photos", id: "photos", icon: "https://img.icons8.com/color/1200/ios-photos.jpg", isCustom: false }
 ];
 let dockApps = JSON.parse(localStorage.getItem("dockApps"));
 let homeApps = JSON.parse(localStorage.getItem("homeApps"));
@@ -200,15 +208,15 @@ function createAppEl(app) {
     const x = document.createElement("div");
     x.className = "delete-x";
     x.textContent = "×";
-    x.onclick = e => { 
-      e.stopImmediatePropagation(); 
-      if(confirm(`Delete "${app.name}"?`)) { 
-        dockApps = dockApps.filter(a => a !== app); 
-        homeApps = homeApps.filter(a => a !== app); 
-        localStorage.setItem("dockApps", JSON.stringify(dockApps)); 
-        localStorage.setItem("homeApps", JSON.stringify(homeApps)); 
-        render(); 
-      } 
+    x.onclick = e => {
+      e.stopImmediatePropagation();
+      if(confirm(`Delete "${app.name}"?`)) {
+        dockApps = dockApps.filter(a => a !== app);
+        homeApps = homeApps.filter(a => a !== app);
+        localStorage.setItem("dockApps", JSON.stringify(dockApps));
+        localStorage.setItem("homeApps", JSON.stringify(homeApps));
+        render();
+      }
     };
     el.appendChild(x);
   }
@@ -352,12 +360,10 @@ function syncOrder() {
     const key = app.id || app.url || app.name;
     if (key) appMap.set(key, app);
   });
-
   // Rebuild dockApps from current dock DOM
   const newDockApps = Array.from(dock.children)
     .map(el => appMap.get(el.dataset.id))
     .filter(Boolean);
-
   // Rebuild homeApps from all pages
   const newHomeApps = [];
   Array.from(home.children).forEach(page => {
@@ -366,11 +372,9 @@ function syncOrder() {
       if (found) newHomeApps.push(found);
     });
   });
-
   // Now assign the new arrays
   dockApps = newDockApps;
   homeApps = newHomeApps;
-
   localStorage.setItem("dockApps", JSON.stringify(dockApps));
   localStorage.setItem("homeApps", JSON.stringify(homeApps));
 }
@@ -514,6 +518,7 @@ function addCustomWebApp() {
       homeApps.push(newApp);
       localStorage.setItem("homeApps", JSON.stringify(homeApps));
       render();
+      scrollToLastPage();
       clearCustomInputs();
     };
     reader.readAsDataURL(file);
@@ -527,6 +532,7 @@ function addCustomWebApp() {
       homeApps.push(newApp);
       localStorage.setItem("homeApps", JSON.stringify(homeApps));
       render();
+      scrollToLastPage();
       clearCustomInputs();
     };
     img.onerror = () => {
@@ -534,9 +540,18 @@ function addCustomWebApp() {
       homeApps.push(newApp);
       localStorage.setItem("homeApps", JSON.stringify(homeApps));
       render();
+      scrollToLastPage();
       clearCustomInputs();
     };
     img.src = faviconUrl;
+  }
+}
+function scrollToLastPage() {
+  const pages = home.children;
+  if (pages.length > 0) {
+    const lastPageIndex = pages.length - 1;
+    const lastPage = pages[lastPageIndex];
+    home.scrollTo({ left: lastPage.offsetLeft, behavior: 'smooth' });
   }
 }
 function clearCustomInputs() {
@@ -555,7 +570,7 @@ function setWallpaper(input) {
 function adjustDockSize() {
   const maxDock = deviceMode === 'ipad' ? 6 : 4;
   if (dockApps.length > maxDock) {
-    homeApps = homeApps.concat(dockApps.slice(maxDock)); // append to end instead of prepend
+    homeApps = homeApps.concat(dockApps.slice(maxDock));
     dockApps = dockApps.slice(0, maxDock);
     localStorage.setItem("dockApps", JSON.stringify(dockApps));
     localStorage.setItem("homeApps", JSON.stringify(homeApps));
