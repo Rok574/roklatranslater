@@ -121,9 +121,8 @@
       let currentDevice = 'iphone'; // 'iphone' or 'ipad'
       let client = null;
       let session = null;
-
-      const baseParams = "&appearance=dark&autoplay=false&scale=auto&centered=true&xdocMsg=true&launchApp=false&screenOnly=true";
-      const iphoneSrc = `https://appetize.io/embed/y67755zn4jbqsdr7edpx5hmv34${baseParams}&osVersion=26.0&device=iphone16promax&orientation=portrait`;
+      
+      const iphoneSrc = `https://appetize.io/embed/y67755zn4jbqsdr7edpx5hmv34?device=iphone16promax&osVersion=26.0&appearance=dark&autoplay=false&scale=auto&centered=true&xdocMsg=true&launchApp=false&screenOnly=true&orientation=portrait`;
       const ipadSrc = `https://appetize.io/embed/y67755zn4jbqsdr7edpx5hmv34?device=ipadpro129inch5thgeneration&orientation=landscape&osVersion=18.2&appearance=dark&autoplay=false&scale=auto&centered=true&xdocMsg=true&launchApp=false&screenOnly=true`;
 
       await new Promise(resolve => {
