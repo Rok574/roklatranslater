@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://js.appetize.io/embed.js"></script>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      text-align: center;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 10px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .controls {
+      position: relative;
+      z-index: 100;
+      margin: 10px 0 15px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    button {
+      /* Minimal styling for less space */
+    }
+    #appetizeWrapper {
+      width: 100%;
+      max-width: 420px;
+      height: 90vh;
+      margin: 0 auto;
+      overflow: hidden;
+      background: transparent;
+      transition: all 0.5s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #appetize-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    #note {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #aaa;
+      max-width: 600px;
+    }
+    /* Fullscreen centering + buttons overlay */
+    :fullscreen body,
+    :-webkit-full-screen body,
+    :-moz-full-screen body {
+      padding: 0;
+      margin: 0;
+      background: #000;
+      display: flex !important;
+      flex-direction: column;
+      justify-content: center !important;
+      align-items: center !important;
+      height: 100vh;
+      overflow: hidden;
+    }
+    :fullscreen #appetizeWrapper,
+    :-webkit-full-screen #appetizeWrapper,
+    :-moz-full-screen #appetizeWrapper {
+      max-width: 100vw !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      margin: 0 !important;
+    }
+    :fullscreen .controls,
+    :-webkit-full-screen .controls,
+    :-moz-full-screen .controls {
+      position: fixed !important;
+      top: 10px;
+      left: 0;
+      right: 0;
+      z-index: 9999 !important;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 8px 0;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <button id="fullscreenBtn">Fullscreen</button>
+    <button id="switchBtn">Switch to iPad</button>
+  </div>
+
+  <div id="appetizeWrapper">
+    <center><button id="homeBtn" disabled>Home (loading...)</button></center>
+    <iframe
+      id="appetize-iframe"
+      src="https://appetize.io/embed/y67755zn4jbqsdr7edpx5hmv34?device=iphone16promax&osVersion=26.0&appearance=dark&autoplay=false&scale=auto&centered=true&xdocMsg=true&launchApp=false&screenOnly=true&orientation=portrait"
+      frameborder="0"
+      scrolling="no"
+      allowfullscreen
+      allow="fullscreen">
+      </iframe>
+  </div>
+
+ 
+
+  <script>
+    (async () => {
+      const homeBtn = document.getElementById('homeBtn');
+      const fsBtn = document.getElementById('fullscreenBtn');
+      const switchBtn = document.getElementById('switchBtn');
+      const iframe = document.getElementById('appetize-iframe');
+      const wrapper = document.getElementById('appetizeWrapper');
+
+      let currentDevice = 'iphone'; // 'iphone' or 'ipad'
+      let client = null;
+      let session = null;
+
+      const baseParams = "?osVersion=26.0&appearance=dark&autoplay=false&scale=auto&centered=true&xdocMsg=true&launchApp=false&screenOnly=true";
+      const iphoneSrc = `https://appetize.io/embed/y67755zn4jbqsdr7edpx5hmv34${baseParams}&device=iphone16promax&orientation=portrait`;
+      const ipadSrc = `https://appetize.io/embed/y67755zn4jbqsdr7edpx5hmv34${baseParams}&device=ipadpro129inch5thgeneration&orientation=landscape`;
+
+      await new Promise(resolve => {
+        if (window.appetize) resolve();
+        else {
+          const interval = setInterval(() => {
+            if (window.appetize) {
+              clearInterval(interval);
+              resolve();
+            }
+          }, 100);
+        }
+      });
+
+      async function initClient() {
+        client = await window.appetize.getClient('#appetize-iframe');
+        client.on('session', (s) => {
+          session = s;
+          homeBtn.disabled = false;
+          homeBtn.textContent = 'Home';
+          console.log(`Session ready on ${currentDevice}`);
+        });
+      }
+
+      await initClient();
+
+      homeBtn.onclick = async () => {
+        if (!session) {
+          alert('Tap inside the emulator to start first.');
+          return;
+        }
+        try {
+          let x = 200, y = 850;
+          if (currentDevice === 'ipad') {
+            x = 600;
+            y = 500; // Adjusted for iPad landscape
+          }
+          await session.tap({ x, y });
+          console.log('Home gesture simulated');
+        } catch (err) {
+          console.error('Tap failed:', err);
+          iframe.contentWindow.postMessage({ type: 'emitHomeButton' }, '*');
+          console.log('Fallback HOME sent');
+        }
+      };
+
+      switchBtn.onclick = () => {
+        if (currentDevice === 'iphone') {
+          currentDevice = 'ipad';
+          switchBtn.textContent = 'Switch to iPhone';
+          wrapper.style.maxWidth = '1000px';
+          wrapper.style.height = '80vh';
+          iframe.src = ipadSrc;
+        } else {
+          currentDevice = 'iphone';
+          switchBtn.textContent = 'Switch to iPad';
+          wrapper.style.maxWidth = '420px';
+          wrapper.style.height = '90vh';
+          iframe.src = iphoneSrc;
+        }
+        homeBtn.disabled = true;
+        homeBtn.textContent = 'Home (loading...)';
+        setTimeout(initClient, 800); // Delay for reload
+      };
+
+      fsBtn.onclick = () => {
+        const isFS = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+        if (isFS) {
+          if (document.exitFullscreen) document.exitFullscreen();
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+          else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+        } else {
+          if (wrapper.requestFullscreen) wrapper.requestFullscreen();
+          else if (wrapper.webkitRequestFullscreen) wrapper.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+          else if (wrapper.mozRequestFullScreen) wrapper.mozRequestFullScreen();
+        }
+      };
+
+      const updateFSButton = () => {
+        const isFS = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+        fsBtn.textContent = isFS ? 'Exit Fullscreen' : 'Fullscreen';
+      };
+
+      document.addEventListener('fullscreenchange', updateFSButton);
+      document.addEventListener('webkitfullscreenchange', updateFSButton);
+      document.addEventListener('mozfullscreenchange', updateFSButton);
+      updateFSButton();
+    })();
+  </script>
+</body>
+</html>
