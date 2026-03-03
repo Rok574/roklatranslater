@@ -2,16 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="iPhone">
-
 <meta name="viewport"
-content="width=device-width,
-initial-scale=1,
-maximum-scale=1,
-user-scalable=no,
-viewport-fit=cover">
+content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 
 <script src="https://js.appetize.io/embed.js"></script>
 
@@ -24,98 +16,132 @@ html, body {
   overflow: hidden;
 }
 
-/* Fullscreen button */
-.controls {
+#controls {
   position: fixed;
-  top: 15px;
-  left: 15px;
-  z-index: 9999;
+  top: 10px;
+  left: 10px;
+  z-index: 999;
 }
 
-button {
-  padding: 10px 16px;
+select {
+  padding: 6px;
   font-size: 14px;
-  border-radius: 10px;
-  border: none;
-  background: rgba(20,20,20,0.9);
-  color: white;
 }
 
-/* Emulator wrapper */
 #appetizeWrapper {
   width: 100%;
   height: 100vh;
   background: black;
   position: relative;
+  touch-action: none;
 }
 
-/* TRUE fullscreen */
-#appetizeWrapper:fullscreen,
-#appetizeWrapper:-webkit-full-screen {
-  width: 100vw !important;
-  height: 100vh !important;
-}
-
-/* iframe fills entire screen */
 #appetize-iframe {
   width: 100%;
   height: 100%;
   border: none;
-  display: block;
 }
 </style>
 </head>
 
 <body>
 
-<div class="controls" id="controls">
-  <button id="fullscreenBtn">Enter Fullscreen</button>
+<div id="controls">
+  <select id="osSelect">
+    <option value="18.2">iOS 18.2</option>
+    <option value="26.0" selected>iOS 26.0</option>
+  </select>
 </div>
 
 <div id="appetizeWrapper">
-  <iframe
-    id="appetize-iframe"
-    src="https://appetize.io/embed/y67755zn4jbqsdr7edpx5hmv34?device=iphone12&osVersion=26.0&appearance=dark&autoplay=false&scale=auto&centered=true&xdocMsg=true&launchApp=false&screenOnly=true&orientation=portrait"
-    allow="fullscreen"
-    allowfullscreen>
+  <iframe id="appetize-iframe"
+    allowfullscreen
+    allow="fullscreen">
   </iframe>
 </div>
 
 <script>
 (async () => {
 
-  const fsBtn = document.getElementById('fullscreenBtn');
-  const wrapper = document.getElementById('appetizeWrapper');
-  const controls = document.getElementById('controls');
+  const iframe = document.getElementById("appetize-iframe");
+  const wrapper = document.getElementById("appetizeWrapper");
+  const osSelect = document.getElementById("osSelect");
 
-  fsBtn.onclick = async () => {
-    const isFS =
-      document.fullscreenElement ||
-      document.webkitFullscreenElement;
+  let client = null;
+  let session = null;
 
-    if (!isFS) {
-      if (wrapper.requestFullscreen) {
-        await wrapper.requestFullscreen();
-      } else if (wrapper.webkitRequestFullscreen) {
-        await wrapper.webkitRequestFullscreen();
-      }
-    }
-  };
-
-  function updateUI() {
-    const isFS =
-      document.fullscreenElement ||
-      document.webkitFullscreenElement;
-
-    if (isFS) {
-      controls.style.display = "none";   // Hide button
-    } else {
-      controls.style.display = "block";  // Show button again
-    }
+  function getURL(os) {
+    return `https://appetize.io/embed/y67755zn4jbqsdr7edpx5hmv34?device=iphone11pro&osVersion=${os}&appearance=dark&autoplay=false&scale=auto&centered=true&xdocMsg=true&launchApp=false&screenOnly=true&orientation=portrait`;
   }
 
-  document.addEventListener("fullscreenchange", updateUI);
-  document.addEventListener("webkitfullscreenchange", updateUI);
+  async function waitForSDK() {
+    await new Promise(resolve => {
+      if (window.appetize) resolve();
+      else {
+        const i = setInterval(() => {
+          if (window.appetize) {
+            clearInterval(i);
+            resolve();
+          }
+        }, 100);
+      }
+    });
+  }
+
+  async function init() {
+    await waitForSDK();
+    client = await window.appetize.getClient("#appetize-iframe");
+    client.on("session", s => {
+      session = s;
+    });
+  }
+
+  async function loadEmulator() {
+    session = null;
+    iframe.src = getURL(osSelect.value);
+    await init();
+  }
+
+  osSelect.onchange = loadEmulator;
+
+  await loadEmulator();
+
+  /* -------- SWIPE UP DETECTION -------- */
+
+  let startY = 0;
+  let startX = 0;
+
+  wrapper.addEventListener("touchstart", e => {
+    const touch = e.touches[0];
+    startY = touch.clientY;
+    startX = touch.clientX;
+  });
+
+  wrapper.addEventListener("touchend", async e => {
+    if (!session) return;
+
+    const touch = e.changedTouches[0];
+    const endY = touch.clientY;
+    const deltaY = startY - endY;
+
+    const screenHeight = window.innerHeight;
+
+    const startedNearBottom = startY > screenHeight * 0.85;
+    const swipedUpEnough = deltaY > 80;
+
+    if (startedNearBottom && swipedUpEnough) {
+      try {
+        await session.swipe({
+          target: {
+            position: { x: "50%", y: "95%" },
+            gesture: { x: "50%", y: "10%", duration: 400 }
+          }
+        });
+      } catch (err) {
+        console.error("Swipe failed", err);
+      }
+    }
+  });
 
 })();
 </script>
