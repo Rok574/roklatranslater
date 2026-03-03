@@ -16,30 +16,49 @@ html, body {
   overflow: hidden;
 }
 
+/* Top Controls */
 #controls {
   position: fixed;
   top: 10px;
   left: 10px;
-  z-index: 999;
+  z-index: 1000;
+  display: flex;
+  gap: 8px;
 }
 
-select {
-  padding: 6px;
+select, button {
+  padding: 6px 10px;
   font-size: 14px;
+  border-radius: 8px;
+  border: none;
 }
 
+/* Emulator wrapper */
 #appetizeWrapper {
   width: 100%;
   height: 100vh;
   background: black;
   position: relative;
-  touch-action: none;
 }
 
 #appetize-iframe {
   width: 100%;
   height: 100%;
   border: none;
+}
+
+/* Tiny Home Bar Button */
+#homeBarBtn {
+  position: fixed;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 6px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.6);
+  z-index: 2000;
+  cursor: pointer;
 }
 </style>
 </head>
@@ -51,21 +70,24 @@ select {
     <option value="18.2">iOS 18.2</option>
     <option value="26.0" selected>iOS 26.0</option>
   </select>
+  <button id="fullscreenBtn">Fullscreen</button>
 </div>
 
 <div id="appetizeWrapper">
-  <iframe id="appetize-iframe"
-    allowfullscreen
-    allow="fullscreen">
-  </iframe>
+  <iframe id="appetize-iframe" allowfullscreen allow="fullscreen"></iframe>
 </div>
+
+<div id="homeBarBtn"></div>
 
 <script>
 (async () => {
 
   const iframe = document.getElementById("appetize-iframe");
-  const wrapper = document.getElementById("appetizeWrapper");
   const osSelect = document.getElementById("osSelect");
+  const fsBtn = document.getElementById("fullscreenBtn");
+  const homeBarBtn = document.getElementById("homeBarBtn");
+  const controls = document.getElementById("controls");
+  const wrapper = document.getElementById("appetizeWrapper");
 
   let client = null;
   let session = null;
@@ -88,7 +110,7 @@ select {
     });
   }
 
-  async function init() {
+  async function initClient() {
     await waitForSDK();
     client = await window.appetize.getClient("#appetize-iframe");
     client.on("session", s => {
@@ -99,49 +121,61 @@ select {
   async function loadEmulator() {
     session = null;
     iframe.src = getURL(osSelect.value);
-    await init();
+    await initClient();
   }
 
   osSelect.onchange = loadEmulator;
-
   await loadEmulator();
 
-  /* -------- SWIPE UP DETECTION -------- */
+  /* -------- HOME BAR BUTTON -------- */
 
-  let startY = 0;
-  let startX = 0;
-
-  wrapper.addEventListener("touchstart", e => {
-    const touch = e.touches[0];
-    startY = touch.clientY;
-    startX = touch.clientX;
-  });
-
-  wrapper.addEventListener("touchend", async e => {
+  homeBarBtn.onclick = async () => {
     if (!session) return;
 
-    const touch = e.changedTouches[0];
-    const endY = touch.clientY;
-    const deltaY = startY - endY;
+    try {
+      // Official HOME keypress (UI Automation)
+      await session.keypress("HOME");
+    } catch (err) {
+      console.error("HOME key failed", err);
+    }
+  };
 
-    const screenHeight = window.innerHeight;
+  /* -------- FULLSCREEN -------- */
 
-    const startedNearBottom = startY > screenHeight * 0.85;
-    const swipedUpEnough = deltaY > 80;
+  fsBtn.onclick = async () => {
+    const isFS =
+      document.fullscreenElement ||
+      document.webkitFullscreenElement;
 
-    if (startedNearBottom && swipedUpEnough) {
-      try {
-        await session.swipe({
-          target: {
-            position: { x: "50%", y: "95%" },
-            gesture: { x: "50%", y: "10%", duration: 400 }
-          }
-        });
-      } catch (err) {
-        console.error("Swipe failed", err);
+    if (!isFS) {
+      if (wrapper.requestFullscreen) {
+        await wrapper.requestFullscreen();
+      } else if (wrapper.webkitRequestFullscreen) {
+        await wrapper.webkitRequestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        await document.webkitExitFullscreen();
       }
     }
-  });
+  };
+
+  function updateUI() {
+    const isFS =
+      document.fullscreenElement ||
+      document.webkitFullscreenElement;
+
+    if (isFS) {
+      controls.style.display = "none";   // Hide OS selector + FS button
+    } else {
+      controls.style.display = "flex";
+    }
+  }
+
+  document.addEventListener("fullscreenchange", updateUI);
+  document.addEventListener("webkitfullscreenchange", updateUI);
 
 })();
 </script>
