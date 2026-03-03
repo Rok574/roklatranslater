@@ -24,6 +24,7 @@ html, body {
   z-index: 10000;
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 select, button {
@@ -33,29 +34,33 @@ select, button {
   border: none;
 }
 
-/* Emulator wrapper */
+/* Wrapper keeps aspect ratio centered */
 #appetizeWrapper {
   width: 100%;
   height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: black;
   position: relative;
 }
 
+/* IMPORTANT: preserve aspect ratio */
 #appetize-iframe {
-  width: 100%;
   height: 100%;
+  aspect-ratio: 9 / 19.5;
   border: none;
-  display: block;
+  max-width: 100%;
 }
 
-/* Reliable Home Bar */
+/* Fake Home Bar */
 #homeBarBtn {
   position: absolute;
-  bottom: 10px;
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
-  width: 140px;
-  height: 8px;
+  width: 120px;
+  height: 6px;
   border-radius: 6px;
   background: rgba(255,255,255,0.9);
   z-index: 99999;
@@ -68,10 +73,24 @@ select, button {
 <body>
 
 <div id="controls">
+  <select id="deviceSelect">
+    <option value="iphone16pro">iPhone 16 Pro</option>
+    <option value="iphone16promax">iPhone 16 Pro Max</option>
+    <option value="iphone15pro">iPhone 15 Pro</option>
+    <option value="iphone15promax">iPhone 15 Pro Max</option>
+    <option value="iphone14pro">iPhone 14 Pro</option>
+    <option value="iphone14promax">iPhone 14 Pro Max</option>
+    <option value="iphone13pro">iPhone 13 Pro</option>
+    <option value="iphone13promax">iPhone 13 Pro Max</option>
+    <option value="iphone12">iPhone 12</option>
+    <option value="iphone11pro" selected>iPhone 11 Pro</option>
+  </select>
+
   <select id="osSelect">
     <option value="18.2">iOS 18.2</option>
     <option value="26.0" selected>iOS 26.0</option>
   </select>
+
   <button id="fullscreenBtn">Fullscreen</button>
 </div>
 
@@ -81,7 +100,6 @@ select, button {
           allow="fullscreen">
   </iframe>
 
-  <!-- Fake iPhone Home Bar -->
   <div id="homeBarBtn"></div>
 </div>
 
@@ -89,6 +107,7 @@ select, button {
 (async () => {
 
   const iframe = document.getElementById("appetize-iframe");
+  const deviceSelect = document.getElementById("deviceSelect");
   const osSelect = document.getElementById("osSelect");
   const fsBtn = document.getElementById("fullscreenBtn");
   const homeBarBtn = document.getElementById("homeBarBtn");
@@ -98,8 +117,8 @@ select, button {
   let client = null;
   let session = null;
 
-  function getURL(os) {
-    return `https://appetize.io/embed/y67755zn4jbqsdr7edpx5hmv34?device=iphone11pro&osVersion=${os}&appearance=dark&autoplay=false&scale=auto&centered=true&xdocMsg=true&launchApp=false&screenOnly=true&orientation=portrait`;
+  function getURL(device, os) {
+    return `https://appetize.io/embed/y67755zn4jbqsdr7edpx5hmv34?device=${device}&osVersion=${os}&appearance=dark&autoplay=false&scale=auto&centered=true&xdocMsg=true&launchApp=false&screenOnly=true&orientation=portrait`;
   }
 
   async function waitForSDK() {
@@ -126,16 +145,16 @@ select, button {
 
   async function loadEmulator() {
     session = null;
-    iframe.src = getURL(osSelect.value);
+    iframe.src = getURL(deviceSelect.value, osSelect.value);
     await initClient();
   }
 
+  deviceSelect.onchange = loadEmulator;
   osSelect.onchange = loadEmulator;
 
   await loadEmulator();
 
-  /* ----- HOME BAR (ULTRA RELIABLE) ----- */
-
+  /* HOME BAR */
   homeBarBtn.addEventListener("touchstart", async (e) => {
     e.preventDefault();
     if (!session) return;
@@ -143,29 +162,22 @@ select, button {
     try {
       await session.keypress("HOME");
     } catch (err) {
-      console.error("HOME key failed", err);
+      console.error("HOME failed", err);
     }
   }, { passive: false });
 
-  /* ----- FULLSCREEN ----- */
-
+  /* FULLSCREEN */
   fsBtn.onclick = async () => {
     const isFS =
       document.fullscreenElement ||
       document.webkitFullscreenElement;
 
     if (!isFS) {
-      if (wrapper.requestFullscreen) {
-        await wrapper.requestFullscreen();
-      } else if (wrapper.webkitRequestFullscreen) {
-        await wrapper.webkitRequestFullscreen();
-      }
+      await wrapper.requestFullscreen?.() ||
+      wrapper.webkitRequestFullscreen?.();
     } else {
-      if (document.exitFullscreen) {
-        await document.exitFullscreen();
-      } else if (document.webkitExitFullscreen) {
-        await document.webkitExitFullscreen();
-      }
+      await document.exitFullscreen?.() ||
+      document.webkitExitFullscreen?.();
     }
   };
 
@@ -174,11 +186,7 @@ select, button {
       document.fullscreenElement ||
       document.webkitFullscreenElement;
 
-    if (isFS) {
-      controls.style.display = "none";
-    } else {
-      controls.style.display = "flex";
-    }
+    controls.style.display = isFS ? "none" : "flex";
   }
 
   document.addEventListener("fullscreenchange", updateUI);
