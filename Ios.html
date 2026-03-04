@@ -33,15 +33,15 @@ html, body {
   max-width: 100%;
 }
 
-/* Tiny Home Button (Bottom Right) */
+/* 37px Bottom-Right Home Button */
 #homeButton {
   position: absolute;
-  bottom: 12px;
-  right: 12px;
-  width: 12px;
-  height: 12px;
+  bottom: 16px;
+  right: 16px;
+  width: 37px;
+  height: 37px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.18);
   z-index: 20;
   transition: transform 0.1s ease, background 0.1s ease;
   cursor: pointer;
@@ -131,7 +131,7 @@ let selectedDevice = null;
 let selectedOS = null;
 let session = null;
 
-/* Build buttons */
+/* Build device buttons */
 devices.forEach(device => {
   const btn = document.createElement("button");
   btn.className = "optionBtn";
@@ -145,6 +145,7 @@ devices.forEach(device => {
   deviceContainer.appendChild(btn);
 });
 
+/* Build OS buttons */
 osVersions.forEach(os => {
   const btn = document.createElement("button");
   btn.className = "optionBtn";
@@ -193,14 +194,14 @@ async function loadEmulator(device, os) {
   client.on("session", s => session = s);
 }
 
-/* Tiny Home Button Click */
+/* Home Button Click */
 homeBtn.addEventListener("click", () => {
-  homeBtn.style.transform = "scale(0.8)";
+  homeBtn.style.transform = "scale(0.85)";
   homeBtn.style.background = "rgba(255,255,255,0.4)";
 
   setTimeout(() => {
     homeBtn.style.transform = "scale(1)";
-    homeBtn.style.background = "rgba(255,255,255,0.12)";
+    homeBtn.style.background = "rgba(255,255,255,0.18)";
   }, 100);
 
   session?.keypress("HOME");
