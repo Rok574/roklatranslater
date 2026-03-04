@@ -108,7 +108,7 @@ html, body {
 </div>
 
 <script>
-(async () => {
+(function () {
 
 const devices = [
   "iphone17pro","iphone17promax",
@@ -159,7 +159,7 @@ osVersions.forEach(os => {
 });
 
 /* Close overlay when both selected */
-overlay.addEventListener("click", () => {
+overlay.addEventListener("click", function () {
   if (selectedDevice && selectedOS) {
     overlay.remove();
     loadEmulator(selectedDevice, selectedOS);
@@ -170,52 +170,44 @@ function getURL(device, os) {
   return `https://appetize.io/embed/y67755zn4jbqsdr7edpx5hmv34?device=${device}&osVersion=${os}&appearance=dark&audio=true&autoplay=true&scale=auto&centered=true&xdocMsg=true&launchApp=false&screenOnly=true&orientation=portrait`;
 }
 
-async function waitForSDK() {
-  await new Promise(resolve => {
-    if (window.appetize) resolve();
-    else {
-      const i = setInterval(() => {
-        if (window.appetize) {
-          clearInterval(i);
-          resolve();
-        }
-      }, 100);
-    }
+function waitForSDK(callback) {
+  if (window.appetize) {
+    callback();
+  } else {
+    var i = setInterval(function () {
+      if (window.appetize) {
+        clearInterval(i);
+        callback();
+      }
+    }, 100);
+  }
+}
+
+function loadEmulator(device, os) {
+  var iframe = document.getElementById("appetize-iframe");
+  iframe.src = getURL(device, os);
+
+  waitForSDK(function () {
+    window.appetize.getClient("#appetize-iframe").then(function (client) {
+      client.on("session", function (s) {
+        session = s;
+      });
+    });
   });
 }
 
-async function loadEmulator(device, os) {
-  const iframe = document.getElementById("appetize-iframe");
-  iframe.src = getURL(device, os);
-
-  await waitForSDK();
-  const client = await window.appetize.getClient("#appetize-iframe");
-  client.on("session", s => session = s);
-}
-
-/* Home Button Logic */
-homeBtn.addEventListener("click", async () => {
+/* Working HOME button */
+homeBtn.addEventListener("click", function () {
   homeBtn.style.transform = "scale(0.85)";
   homeBtn.style.background = "rgba(255,255,255,0.4)";
 
-  setTimeout(() => {
+  setTimeout(function () {
     homeBtn.style.transform = "scale(1)";
     homeBtn.style.background = "rgba(255,255,255,0.18)";
   }, 100);
 
-  if (!session || !selectedOS) return;
-
-  if (selectedOS.startsWith("18")) {
-    // iOS 18 needs swipe gesture
-    await session.gesture({
-      type: "swipe",
-      from: { x: 0.5, y: 0.97 },
-      to: { x: 0.5, y: 0.55 },
-      duration: 0.25
-    });
-  } else {
-    // Other versions use HOME key
-    await session.keypress("HOME");
+  if (session) {
+    session.keypress("HOME");
   }
 });
 
