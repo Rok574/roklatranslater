@@ -33,26 +33,26 @@ html, body {
   max-width: 100%;
 }
 
-/* Swipe Zone (bigger = responsive) */
+/* Swipe Zone */
 #homeSwipeZone {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 90px;
+  height: 70px; /* still large hit area */
   z-index: 10;
 }
 
-/* Visual Bar */
+/* Realistic Home Indicator */
 #homeBarVisual {
   position: absolute;
-  bottom: 22px;
+  bottom: 10px; /* closer to edge */
   left: 50%;
   transform: translateX(-50%);
-  width: 140px;
-  height: 8px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.95);
+  width: 115px; /* more realistic */
+  height: 5px; /* thinner */
+  border-radius: 3px;
+  background: rgba(255,255,255,0.85);
   transition: transform 0.15s ease;
 }
 
