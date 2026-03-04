@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport"
-content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-
+content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <script src="https://js.appetize.io/embed.js"></script>
 
 <style>
@@ -17,7 +16,8 @@ html, body {
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-#appWrapper {
+/* Emulator */
+#appetizeWrapper {
   width: 100%;
   height: 100vh;
   display: flex;
@@ -33,19 +33,28 @@ html, body {
   max-width: 100%;
 }
 
-/* Home Button (Bottom Right) */
-#homeButton {
+/* Edge Swipe Zone (small, not blocking screen) */
+#homeSwipeZone {
   position: absolute;
-  bottom: 18px;
-  right: 18px;
-  width: 37px;
-  height: 37px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.18);
-  backdrop-filter: blur(10px);
-  z-index: 20;
-  cursor: pointer;
-  transition: transform 0.1s ease, background 0.1s ease;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  z-index: 5;
+}
+
+/* Realistic Home Indicator */
+#homeBarVisual {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.85);
+  transition: transform 0.12s ease;
+  pointer-events: none;
 }
 
 /* Setup Overlay */
@@ -53,7 +62,7 @@ html, body {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(25px);
+  backdrop-filter: blur(20px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -68,6 +77,11 @@ html, body {
   max-width: 420px;
   max-height: 80vh;
   overflow-y: auto;
+  animation: fadeIn 0.3s ease;
+}
+
+#setupBox h3 {
+  margin-top: 0;
   color: white;
 }
 
@@ -85,6 +99,19 @@ html, body {
 .optionBtn.selected {
   background: #0a84ff;
 }
+
+.fadeOut {
+  animation: fadeOut 0.3s forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; transform: scale(0.95); }
+}
 </style>
 </head>
 
@@ -100,13 +127,16 @@ html, body {
   </div>
 </div>
 
-<div id="appWrapper">
+<div id="appetizeWrapper">
   <iframe id="appetize-iframe"></iframe>
-  <div id="homeButton"></div>
+
+  <div id="homeSwipeZone">
+    <div id="homeBarVisual"></div>
+  </div>
 </div>
 
 <script>
-(function () {
+(async () => {
 
 const devices = [
   "iphone17pro","iphone17promax",
@@ -119,51 +149,46 @@ const devices = [
 
 const osVersions = ["26.0","18.2","17.2","16.2","15.5"];
 
+const deviceContainer = document.getElementById("deviceOptions");
+const osContainer = document.getElementById("osOptions");
+const overlay = document.getElementById("setupOverlay");
+
 let selectedDevice = null;
 let selectedOS = null;
 let session = null;
 
-const deviceContainer = document.getElementById("deviceOptions");
-const osContainer = document.getElementById("osOptions");
-const overlay = document.getElementById("setupOverlay");
-const homeBtn = document.getElementById("homeButton");
-
-/* Build Device Buttons */
-devices.forEach(d => {
+/* Build Buttons */
+devices.forEach(device => {
   const btn = document.createElement("button");
   btn.className = "optionBtn";
-  btn.textContent = d;
-
+  btn.textContent = device;
   btn.onclick = () => {
-    selectedDevice = d;
+    selectedDevice = device;
     document.querySelectorAll("#deviceOptions .optionBtn")
       .forEach(b => b.classList.remove("selected"));
     btn.classList.add("selected");
   };
-
   deviceContainer.appendChild(btn);
 });
 
-/* Build OS Buttons */
-osVersions.forEach(v => {
+osVersions.forEach(os => {
   const btn = document.createElement("button");
   btn.className = "optionBtn";
-  btn.textContent = v;
-
+  btn.textContent = os;
   btn.onclick = () => {
-    selectedOS = v;
+    selectedOS = os;
     document.querySelectorAll("#osOptions .optionBtn")
       .forEach(b => b.classList.remove("selected"));
     btn.classList.add("selected");
   };
-
   osContainer.appendChild(btn);
 });
 
-/* Tap outside to confirm */
-overlay.addEventListener("click", function () {
+/* Close overlay */
+overlay.addEventListener("click", () => {
   if (selectedDevice && selectedOS) {
-    overlay.remove();
+    overlay.classList.add("fadeOut");
+    setTimeout(() => overlay.remove(), 300);
     loadEmulator(selectedDevice, selectedOS);
   }
 });
@@ -172,41 +197,61 @@ function getURL(device, os) {
   return `https://appetize.io/embed/y67755zn4jbqsdr7edpx5hmv34?device=${device}&osVersion=${os}&appearance=dark&audio=true&autoplay=true&scale=auto&centered=true&xdocMsg=true&launchApp=false&screenOnly=true&orientation=portrait`;
 }
 
-function loadEmulator(device, os) {
+async function waitForSDK() {
+  await new Promise(resolve => {
+    if (window.appetize) resolve();
+    else {
+      const i = setInterval(() => {
+        if (window.appetize) {
+          clearInterval(i);
+          resolve();
+        }
+      }, 100);
+    }
+  });
+}
+
+async function loadEmulator(device, os) {
   const iframe = document.getElementById("appetize-iframe");
   iframe.src = getURL(device, os);
 
-  const wait = setInterval(function () {
-    if (window.appetize) {
-      clearInterval(wait);
-      window.appetize.getClient("#appetize-iframe").then(function (client) {
-        client.on("session", function (s) {
-          session = s;
-        });
-      });
-    }
-  }, 100);
+  await waitForSDK();
+  const client = await window.appetize.getClient("#appetize-iframe");
+  client.on("session", s => session = s);
 }
 
-/* RESTORED SWIPE HOME LOGIC */
-homeBtn.addEventListener("click", function () {
+/* Stable Edge Swipe */
+const swipeZone = document.getElementById("homeSwipeZone");
+const homeBar = document.getElementById("homeBarVisual");
 
-  homeBtn.style.transform = "scale(0.85)";
-  homeBtn.style.background = "rgba(255,255,255,0.4)";
+let startY = 0;
+let deltaY = 0;
+let startTime = 0;
 
-  setTimeout(function () {
-    homeBtn.style.transform = "scale(1)";
-    homeBtn.style.background = "rgba(255,255,255,0.18)";
-  }, 100);
+swipeZone.addEventListener("touchstart", (e) => {
+  startY = e.touches[0].clientY;
+  startTime = Date.now();
+  deltaY = 0;
+}, { passive: true });
 
-  if (!session) return;
+swipeZone.addEventListener("touchmove", (e) => {
+  deltaY = startY - e.touches[0].clientY;
 
-  session.swipe({
-    from: { x: 0.5, y: 0.97 },
-    to:   { x: 0.5, y: 0.80 },
-    duration: 200
-  });
+  if (deltaY > 0) {
+    const limitedMove = Math.min(deltaY / 4, 12);
+    homeBar.style.transform =
+      `translateX(-50%) translateY(-${limitedMove}px)`;
+  }
+}, { passive: true });
 
+swipeZone.addEventListener("touchend", () => {
+  homeBar.style.transform = "translateX(-50%)";
+
+  const duration = Date.now() - startTime;
+
+  if (deltaY > 35 && duration < 600) {
+    session?.keypress("HOME");
+  }
 });
 
 })();
