@@ -16,7 +16,7 @@ html, body {
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Emulator */
+/* Emulator Wrapper */
 #appetizeWrapper {
   width: 100%;
   height: 100vh;
@@ -33,27 +33,18 @@ html, body {
   max-width: 100%;
 }
 
-/* Bottom Gesture Zone (Stadium safe) */
-#homeSwipeZone {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 60px;
-  z-index: 10;
-}
-
-/* Home Indicator */
-#homeBarVisual {
+/* Tiny Home Button (Bottom Right) */
+#homeButton {
   position: absolute;
   bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 120px;
-  height: 6px;
-  border-radius: 3px;
-  background: rgba(255,255,255,0.9);
-  pointer-events: none;
+  right: 12px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  z-index: 20;
+  transition: transform 0.1s ease, background 0.1s ease;
+  cursor: pointer;
 }
 
 /* Setup Overlay */
@@ -114,10 +105,7 @@ html, body {
 
 <div id="appetizeWrapper">
   <iframe id="appetize-iframe"></iframe>
-
-  <div id="homeSwipeZone">
-    <div id="homeBarVisual"></div>
-  </div>
+  <div id="homeButton"></div>
 </div>
 
 <script>
@@ -137,6 +125,7 @@ const osVersions = ["26.0","18.2","17.2","16.2","15.5"];
 const deviceContainer = document.getElementById("deviceOptions");
 const osContainer = document.getElementById("osOptions");
 const overlay = document.getElementById("setupOverlay");
+const homeBtn = document.getElementById("homeButton");
 
 let selectedDevice = null;
 let selectedOS = null;
@@ -204,26 +193,18 @@ async function loadEmulator(device, os) {
   client.on("session", s => session = s);
 }
 
-/* Simple Stadium-safe swipe */
-const swipeZone = document.getElementById("homeSwipeZone");
+/* Tiny Home Button Click */
+homeBtn.addEventListener("click", () => {
+  homeBtn.style.transform = "scale(0.8)";
+  homeBtn.style.background = "rgba(255,255,255,0.4)";
 
-let startY = 0;
-let triggered = false;
+  setTimeout(() => {
+    homeBtn.style.transform = "scale(1)";
+    homeBtn.style.background = "rgba(255,255,255,0.12)";
+  }, 100);
 
-swipeZone.addEventListener("touchstart", (e) => {
-  startY = e.touches[0].clientY;
-  triggered = false;
-}, false);
-
-swipeZone.addEventListener("touchmove", (e) => {
-  const currentY = e.touches[0].clientY;
-  const deltaY = startY - currentY;
-
-  if (!triggered && deltaY > 40) {
-    triggered = true;
-    session?.keypress("HOME");
-  }
-}, false);
+  session?.keypress("HOME");
+});
 
 })();
 </script>
