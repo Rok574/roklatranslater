@@ -33,27 +33,28 @@ html, body {
   max-width: 100%;
 }
 
-/* Swipe Zone */
+/* Edge Swipe Zone (small, not blocking screen) */
 #homeSwipeZone {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 70px; /* still large hit area */
-  z-index: 10;
+  height: 40px;
+  z-index: 5;
 }
 
 /* Realistic Home Indicator */
 #homeBarVisual {
   position: absolute;
-  bottom: 10px; /* closer to edge */
+  bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
-  width: 115px; /* more realistic */
-  height: 5px; /* thinner */
+  width: 110px;
+  height: 5px;
   border-radius: 3px;
   background: rgba(255,255,255,0.85);
-  transition: transform 0.15s ease;
+  transition: transform 0.12s ease;
+  pointer-events: none;
 }
 
 /* Setup Overlay */
@@ -100,7 +101,7 @@ html, body {
 }
 
 .fadeOut {
-  animation: fadeOut 0.35s forwards;
+  animation: fadeOut 0.3s forwards;
 }
 
 @keyframes fadeIn {
@@ -183,7 +184,7 @@ osVersions.forEach(os => {
   osContainer.appendChild(btn);
 });
 
-/* Close overlay when both selected */
+/* Close overlay */
 overlay.addEventListener("click", () => {
   if (selectedDevice && selectedOS) {
     overlay.classList.add("fadeOut");
@@ -219,44 +220,36 @@ async function loadEmulator(device, os) {
   client.on("session", s => session = s);
 }
 
-/* Swipe Logic */
+/* Stable Edge Swipe */
 const swipeZone = document.getElementById("homeSwipeZone");
 const homeBar = document.getElementById("homeBarVisual");
 
 let startY = 0;
 let deltaY = 0;
 let startTime = 0;
-let tracking = false;
 
 swipeZone.addEventListener("touchstart", (e) => {
   startY = e.touches[0].clientY;
   startTime = Date.now();
   deltaY = 0;
-  tracking = true;
-}, { passive: false });
+}, { passive: true });
 
 swipeZone.addEventListener("touchmove", (e) => {
-  if (!tracking) return;
-
   deltaY = startY - e.touches[0].clientY;
 
   if (deltaY > 0) {
+    const limitedMove = Math.min(deltaY / 4, 12);
     homeBar.style.transform =
-      `translateX(-50%) translateY(${Math.min(-deltaY / 2, -30)}px)`;
+      `translateX(-50%) translateY(-${limitedMove}px)`;
   }
-
-  e.preventDefault();
-}, { passive: false });
+}, { passive: true });
 
 swipeZone.addEventListener("touchend", () => {
-  if (!tracking) return;
-  tracking = false;
-
   homeBar.style.transform = "translateX(-50%)";
 
   const duration = Date.now() - startTime;
 
-  if (deltaY > 45 && duration < 700) {
+  if (deltaY > 35 && duration < 600) {
     session?.keypress("HOME");
   }
 });
