@@ -32,7 +32,7 @@ html, body {
   max-width: 100%;
 }
 
-/* Home Button */
+/* 37px Bottom-Right Home Button */
 #homeButton {
   position: absolute;
   bottom: 16px;
@@ -42,9 +42,8 @@ html, body {
   border-radius: 50%;
   background: rgba(255,255,255,0.18);
   z-index: 20;
-  transition: transform 0.1s ease, background 0.1s ease, opacity 0.2s ease;
+  transition: transform 0.1s ease, background 0.1s ease;
   cursor: pointer;
-  opacity: 0.4; /* disabled until ready */
 }
 
 /* Setup Overlay */
@@ -119,7 +118,6 @@ const osVersions = ["26.0","18.2","17.2","16.2","15.5"];
 let selectedDevice = null;
 let selectedOS = null;
 let session = null;
-let deviceReady = false;
 
 const deviceContainer = document.getElementById("deviceOptions");
 const osContainer = document.getElementById("osOptions");
@@ -174,23 +172,14 @@ function loadEmulator(device, os) {
       window.appetize.getClient("#appetize-iframe").then(function (client) {
         client.on("session", function (s) {
           session = s;
-
-          /* Give iOS time to fully boot */
-          setTimeout(function () {
-            deviceReady = true;
-            homeBtn.style.opacity = "1";
-          }, 3000);
         });
       });
     }
   }, 100);
 }
 
-/* HOME BUTTON */
+/* EXACT OLD WORKING LOGIC */
 homeBtn.addEventListener("click", function () {
-
-  if (!session || !deviceReady) return;
-
   homeBtn.style.transform = "scale(0.85)";
   homeBtn.style.background = "rgba(255,255,255,0.4)";
 
@@ -199,7 +188,7 @@ homeBtn.addEventListener("click", function () {
     homeBtn.style.background = "rgba(255,255,255,0.18)";
   }, 100);
 
-  session.keypress("HOME");
+  session?.keypress("HOME");
 });
 
 })();
