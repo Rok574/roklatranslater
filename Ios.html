@@ -13,15 +13,16 @@ html, body {
   height: 100%;
   background: black;
   overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+/* Emulator */
 #appetizeWrapper {
   width: 100%;
   height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: black;
   position: relative;
 }
 
@@ -32,94 +33,169 @@ html, body {
   max-width: 100%;
 }
 
-/* Swipeable Home Bar */
-#homeBarBtn {
+/* Swipe Zone (bigger = responsive) */
+#homeSwipeZone {
   position: absolute;
-  bottom: 18px;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 90px;
+  z-index: 10;
+}
+
+/* Visual Bar */
+#homeBarVisual {
+  position: absolute;
+  bottom: 22px;
   left: 50%;
   transform: translateX(-50%);
   width: 140px;
   height: 8px;
   border-radius: 8px;
   background: rgba(255,255,255,0.95);
-  z-index: 9999;
   transition: transform 0.15s ease;
+}
+
+/* Setup Overlay */
+#setupOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+#setupBox {
+  background: rgba(30,30,30,0.95);
+  padding: 20px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 420px;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: fadeIn 0.3s ease;
+}
+
+#setupBox h3 {
+  margin-top: 0;
+  color: white;
+}
+
+.optionBtn {
+  width: 100%;
+  padding: 10px;
+  margin: 6px 0;
+  border-radius: 12px;
+  border: none;
+  background: #444;
+  color: white;
+  font-size: 14px;
+}
+
+.optionBtn.selected {
+  background: #0a84ff;
+}
+
+.fadeOut {
+  animation: fadeOut 0.35s forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; transform: scale(0.95); }
 }
 </style>
 </head>
 
 <body>
 
+<div id="setupOverlay">
+  <div id="setupBox">
+    <h3>Select iPhone</h3>
+    <div id="deviceOptions"></div>
+
+    <h3>Select iOS Version</h3>
+    <div id="osOptions"></div>
+  </div>
+</div>
+
 <div id="appetizeWrapper">
   <iframe id="appetize-iframe"></iframe>
-  <div id="homeBarBtn"></div>
+
+  <div id="homeSwipeZone">
+    <div id="homeBarVisual"></div>
+  </div>
 </div>
 
 <script>
 (async () => {
 
-const iframe = document.getElementById("appetize-iframe");
-const homeBar = document.getElementById("homeBarBtn");
+const devices = [
+  "iphone17pro","iphone17promax",
+  "iphone16pro","iphone16promax",
+  "iphone15pro","iphone15promax",
+  "iphone14pro","iphone14promax",
+  "iphone13pro","iphone13promax",
+  "iphone12","iphone11pro"
+];
+
+const osVersions = ["26.0","18.2","17.2","16.2","15.5"];
+
+const deviceContainer = document.getElementById("deviceOptions");
+const osContainer = document.getElementById("osOptions");
+const overlay = document.getElementById("setupOverlay");
+
+let selectedDevice = null;
+let selectedOS = null;
 let session = null;
 
-/* Available Devices */
-const devices = [
-  "iphone17pro",
-  "iphone17promax",
-  "iphone16pro",
-  "iphone16promax",
-  "iphone15pro",
-  "iphone15promax",
-  "iphone14pro",
-  "iphone14promax",
-  "iphone13pro",
-  "iphone13promax",
-  "iphone12",
-  "iphone11pro"
-];
+/* Build Buttons */
+devices.forEach(device => {
+  const btn = document.createElement("button");
+  btn.className = "optionBtn";
+  btn.textContent = device;
+  btn.onclick = () => {
+    selectedDevice = device;
+    document.querySelectorAll("#deviceOptions .optionBtn")
+      .forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+  };
+  deviceContainer.appendChild(btn);
+});
 
-/* Available iOS Versions */
-const osVersions = [
-  "26.0",
-  "18.2",
-  "17.2",
-  "16.2",
-  "15.5"
-];
+osVersions.forEach(os => {
+  const btn = document.createElement("button");
+  btn.className = "optionBtn";
+  btn.textContent = os;
+  btn.onclick = () => {
+    selectedOS = os;
+    document.querySelectorAll("#osOptions .optionBtn")
+      .forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+  };
+  osContainer.appendChild(btn);
+});
 
-/* Ask Once Per Refresh */
-if (!sessionStorage.getItem("deviceChoice")) {
-
-  let deviceChoice = prompt(
-    "Choose iPhone:\n\n" + devices.join("\n")
-  );
-
-  if (!devices.includes(deviceChoice)) {
-    deviceChoice = "iphone11pro";
+/* Close overlay when both selected */
+overlay.addEventListener("click", () => {
+  if (selectedDevice && selectedOS) {
+    overlay.classList.add("fadeOut");
+    setTimeout(() => overlay.remove(), 300);
+    loadEmulator(selectedDevice, selectedOS);
   }
-
-  let osChoice = prompt(
-    "Choose iOS Version:\n\n" + osVersions.join("\n")
-  );
-
-  if (!osVersions.includes(osChoice)) {
-    osChoice = "26.0";
-  }
-
-  sessionStorage.setItem("deviceChoice", deviceChoice);
-  sessionStorage.setItem("osChoice", osChoice);
-}
-
-const device = sessionStorage.getItem("deviceChoice");
-const os = sessionStorage.getItem("osChoice");
+});
 
 function getURL(device, os) {
   return `https://appetize.io/embed/y67755zn4jbqsdr7edpx5hmv34?device=${device}&osVersion=${os}&appearance=dark&audio=true&autoplay=true&scale=auto&centered=true&xdocMsg=true&launchApp=false&screenOnly=true&orientation=portrait`;
 }
 
-iframe.src = getURL(device, os);
-
-/* Wait for SDK */
 async function waitForSDK() {
   await new Promise(resolve => {
     if (window.appetize) resolve();
@@ -134,41 +210,53 @@ async function waitForSDK() {
   });
 }
 
-await waitForSDK();
-const client = await window.appetize.getClient("#appetize-iframe");
-client.on("session", s => session = s);
+async function loadEmulator(device, os) {
+  const iframe = document.getElementById("appetize-iframe");
+  iframe.src = getURL(device, os);
 
-/* Swipe Gesture Logic */
+  await waitForSDK();
+  const client = await window.appetize.getClient("#appetize-iframe");
+  client.on("session", s => session = s);
+}
+
+/* Swipe Logic */
+const swipeZone = document.getElementById("homeSwipeZone");
+const homeBar = document.getElementById("homeBarVisual");
+
 let startY = 0;
-let startTime = 0;
 let deltaY = 0;
+let startTime = 0;
+let tracking = false;
 
-homeBar.addEventListener("touchstart", (e) => {
+swipeZone.addEventListener("touchstart", (e) => {
   startY = e.touches[0].clientY;
   startTime = Date.now();
   deltaY = 0;
-}, { passive: true });
+  tracking = true;
+}, { passive: false });
 
-homeBar.addEventListener("touchmove", (e) => {
-  const currentY = e.touches[0].clientY;
-  deltaY = startY - currentY;
+swipeZone.addEventListener("touchmove", (e) => {
+  if (!tracking) return;
+
+  deltaY = startY - e.touches[0].clientY;
 
   if (deltaY > 0) {
     homeBar.style.transform =
-      `translateX(-50%) translateY(${Math.min(-deltaY/3, -20)}px)`;
+      `translateX(-50%) translateY(${Math.min(-deltaY / 2, -30)}px)`;
   }
-}, { passive: true });
 
-homeBar.addEventListener("touchend", () => {
-  const duration = Date.now() - startTime;
+  e.preventDefault();
+}, { passive: false });
+
+swipeZone.addEventListener("touchend", () => {
+  if (!tracking) return;
+  tracking = false;
 
   homeBar.style.transform = "translateX(-50%)";
 
-  // Swipe must be at least 50px upward & quick
-  if (deltaY > 50 && duration < 600) {
-    session?.keypress("HOME");
-  } else {
-    // Tap fallback
+  const duration = Date.now() - startTime;
+
+  if (deltaY > 45 && duration < 700) {
     session?.keypress("HOME");
   }
 });
