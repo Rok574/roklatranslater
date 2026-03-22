@@ -2,335 +2,213 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>RoksVOD</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ROKSVOD</title>
+
+<!-- iOS/Fullscreen Web App Headers -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link href="https://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet">
 
 <style>
-* { box-sizing:border-box; margin:0; padding:0; }
-html,body {
-  height:100%;
-  overflow:hidden;
-  font-family:-apple-system, BlinkMacSystemFont, sans-serif;
-  background:black;
-}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;font-family:'SF Pro Display',-apple-system;background:black;overflow:hidden;color:white;}
+body.light{background:#f2f2f2;color:#111;}
+#wallpaper{position:fixed;inset:0;background:#000 center/cover no-repeat;transition:0.3s;}
 
-/* WALLPAPER */
-#wallpaper {
-  position:fixed;
-  inset:0;
-  background:#000 center/cover no-repeat;
-  z-index:0;
-}
+#home{height:calc(100vh - 120px);display:flex;overflow-x:auto;scroll-snap-type:x mandatory;}
+.page{flex:0 0 100%;display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:25px;}
 
-/* BLUR (iOS depth) */
-#blur {
-  position:fixed;
-  inset:0;
-  backdrop-filter:blur(40px);
-  background:rgba(0,0,0,0.35);
-  z-index:1;
-}
+.app{text-align:center;cursor:pointer;}
+.app img{width:70px;height:70px;border-radius:22px;}
+.app span{display:block;font-size:13px;margin-top:6px;}
 
-/* LOCKSCREEN */
-#lockscreen {
-  position:fixed;
-  inset:0;
-  z-index:10;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  color:white;
-}
+#dock{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+display:flex;gap:15px;padding:10px 20px;border-radius:30px;background:rgba(255,255,255,0.2);overflow:hidden;white-space:nowrap;}
 
-/* TIME */
-#time {
-  position:absolute;
-  top:80px;
-  font-size:56px;
-  font-weight:600;
-}
+.window{position:fixed;inset:0;background:inherit;color:inherit;display:none;flex-direction:column;overflow:auto;}
+.header{height:55px;display:flex;align-items:center;padding:0 15px;background:rgba(0,0,0,0.8);}
+body.light .header{background:rgba(255,255,255,0.9);}
+.back{color:#0a84ff;cursor:pointer;font-size:20px;}
+.title{margin-left:10px;font-weight:bold;}
 
-/* DOTS */
-#dots {
-  display:flex;
-  gap:12px;
-  margin-bottom:20px;
-}
-.dot {
-  width:14px;
-  height:14px;
-  border-radius:50%;
-  border:2px solid white;
-}
-.dot.filled { background:white; }
+button{padding:12px;border:none;border-radius:10px;background:#0a84ff;color:white;margin-top:10px;cursor:pointer;}
+input,textarea{width:100%;padding:12px;border-radius:10px;border:none;margin-top:10px;background:#222;color:white;}
+body.light input,body.light textarea{background:#ddd;color:#111;}
 
-/* KEYPAD */
-#keypad {
-  display:grid;
-  grid-template-columns:repeat(3,80px);
-  gap:18px;
-}
-.key {
-  width:80px;
-  height:80px;
-  border-radius:50%;
-  background:rgba(255,255,255,0.15);
-  backdrop-filter:blur(20px);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:26px;
-}
-.key:active { transform:scale(0.9); }
-
-@keyframes shake {
-  0%{transform:translateX(0)}
-  25%{transform:translateX(-10px)}
-  50%{transform:translateX(10px)}
-  75%{transform:translateX(-10px)}
-  100%{transform:translateX(0)}
-}
-
-/* HOME */
-#home {
-  position:relative;
-  z-index:2;
-  display:flex;
-  gap:20px;
-  padding:30px;
-  flex-wrap:wrap;
-}
-.app {
-  width:70px;
-  text-align:center;
-  color:white;
-}
-.app img {
-  width:64px;
-  border-radius:18px;
-}
-
-/* WINDOWS */
-.window {
-  position:fixed;
-  inset:0;
-  display:none;
-  flex-direction:column;
-  backdrop-filter:blur(30px);
-  background:rgba(0,0,0,0.7);
-  color:white;
-}
-.header {
-  padding:12px;
-}
-.back {
-  color:#0a84ff;
-  cursor:pointer;
-}
-
-/* SETTINGS */
-select, input {
-  padding:12px;
-  margin:10px;
-  border-radius:10px;
-  border:none;
-}
-button {
-  padding:12px;
-  margin:10px;
-  border-radius:10px;
-  border:none;
-  background:#0a84ff;
-  color:white;
-}
+#mediaGallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;padding:10px;}
+.media-card{background:#111;border-radius:10px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;}
+body.light .media-card{background:#eee;}
+.media-card img, .media-card video{width:100%;height:auto;}
+.media-card .title{padding:5px;font-size:14px;text-align:center;flex:1;}
 </style>
 </head>
 <body>
 
-<!-- WALLPAPER -->
 <div id="wallpaper"></div>
-<div id="blur"></div>
+<div id="home"></div>
+<div id="dock"></div>
 
-<!-- LOCKSCREEN -->
-<div id="lockscreen">
-  <div id="time"></div>
-  <div id="dots"></div>
-  <div id="keypad"></div>
+<!-- Notes App -->
+<div id="notes" class="window">
+  <div class="header"><div class="back" onclick="goHome()">‹</div><div class="title">Notes</div></div>
+  <div style="padding:15px">
+    <input id="noteTitle" placeholder="Title">
+    <textarea id="noteContent" placeholder="Write..." style="height:200px"></textarea>
+    <button onclick="saveNote()">Save</button>
+    <div id="notesList"></div>
+  </div>
 </div>
 
-<!-- HOME -->
-<div id="home"></div>
-
-<!-- SETTINGS -->
-<div id="settings" class="window">
-  <div class="header">
-    <span class="back" onclick="goHome()">‹ Home</span>
+<!-- Media App (photos + videos) -->
+<div id="photos" class="window">
+  <div class="header"><div class="back" onclick="goHome()">‹</div><div class="title">Media</div></div>
+  <div style="padding:10px">
+    <input type="file" accept="image/*,video/*" multiple onchange="addMedia(this)">
+    <div id="mediaGallery"></div>
   </div>
+</div>
 
-  <h2 style="padding:10px;">Settings</h2>
+<!-- Browser -->
+<div id="browser" class="window">
+  <div class="header"><div class="back" onclick="goHome()">‹</div><div class="title">Browser</div></div>
+  <div style="padding:15px">
+    <input id="url" placeholder="Enter URL">
+    <button onclick="go()">Go</button>
+  </div>
+</div>
 
-  <h3 style="padding:10px;">Wallpaper</h3>
-  <input type="file" accept="image/*" onchange="setWallpaper(this)">
-
-  <h3 style="padding:10px;">Change Passcode</h3>
-
-  <input id="oldPass" placeholder="Current Passcode">
-  <input id="newPass" placeholder="New Passcode">
-
-  <select id="type">
-    <option value="4">4-Digit Numeric Code</option>
-    <option value="6">6-Digit Numeric Code</option>
-    <option value="num">Custom Numeric Code</option>
-    <option value="text">Custom Alphanumeric Code</option>
-  </select>
-
-  <button onclick="changePass()">Save</button>
+<!-- Settings -->
+<div id="settings" class="window">
+  <div class="header"><div class="back" onclick="goHome()">‹</div><div class="title">Settings</div></div>
+  <div style="padding:15px">
+    <input type="file" onchange="setWallpaper(this)">
+    <label><input type="checkbox" id="modeToggle"> Light Mode</label>
+    <input id="appName" placeholder="App Name">
+    <input id="appUrl" placeholder="URL">
+    <button onclick="addApp()">Add App</button>
+  </div>
 </div>
 
 <script>
-/* TIME */
-setInterval(()=>{
-  document.getElementById("time").innerText =
-    new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-},1000);
+const SYSTEM_APPS = [
+  { name:"Notes", id:"notes", icon:"https://img.icons8.com/fluency/96/note.png", system:true },
+  { name:"Photos", id:"photos", icon:"https://img.icons8.com/color/96/picture.png", system:true },
+  { name:"Chrome", id:"browser", icon:"https://img.icons8.com/color/96/internet.png", system:true },
+  { name:"Settings", id:"settings", icon:"https://img.icons8.com/color/96/settings.png", system:true }
+];
 
-/* WALLPAPER LOAD */
-if(localStorage.wallpaper){
-  document.getElementById("wallpaper").style.backgroundImage =
-    `url(${localStorage.wallpaper})`;
+let apps = JSON.parse(localStorage.apps||"null") || SYSTEM_APPS;
+
+function save(){ localStorage.apps = JSON.stringify(apps); }
+
+function render(){
+  home.innerHTML="";
+  dock.innerHTML="";
+  const page=document.createElement("div"); page.className="page";
+
+  apps.forEach(app=>{
+    const el=document.createElement("div");
+    el.className="app";
+    el.innerHTML=`<img src="${app.icon}"><span>${app.name}</span>`;
+    el.onclick=()=>openApp(app);
+    page.appendChild(el);
+  });
+  home.appendChild(page);
+
+  // DYNAMIC DOCK
+  const maxDock = Math.floor(window.innerWidth / 90); // ~70px icon + padding
+  apps.slice(0,maxDock).forEach(app=>{
+    const d=document.createElement("div"); d.className="app";
+    d.innerHTML=`<img src="${app.icon}"><span>${app.name}</span>`;
+    d.onclick=()=>openApp(app);
+    dock.appendChild(d);
+  });
 }
 
-/* SET WALLPAPER */
+// OPEN APPS
+function openApp(app){
+  if(app.id) document.getElementById(app.id).style.display="flex";
+  else if(app.url) window.open(app.url,"_blank");
+}
+
+function goHome(){ document.querySelectorAll(".window").forEach(w=>w.style.display="none"); }
+
+// ADD CUSTOM APP
+function addApp(){
+  let name=appName.value.trim(); let url=appUrl.value.trim();
+  if(!name||!url)return;
+  let icon=`https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=128`;
+  apps.push({name,url,icon});
+  save(); render();
+}
+
+// WALLPAPER
 function setWallpaper(input){
-  const file = input.files[0];
-  if(!file) return;
+  let r=new FileReader();
+  r.onload=()=>{ wallpaper.style.backgroundImage=`url(${r.result})`; localStorage.wp=r.result; };
+  r.readAsDataURL(input.files[0]);
+}
+if(localStorage.wp) wallpaper.style.backgroundImage=`url(${localStorage.wp})`;
 
-  const reader = new FileReader();
-  reader.onload = e=>{
-    const data = e.target.result;
-    document.getElementById("wallpaper").style.backgroundImage = `url(${data})`;
-    localStorage.wallpaper = data;
-  };
-  reader.readAsDataURL(file);
+// BROWSER
+function go(){ let u=url.value; window.open(u.startsWith("http")?u:"https://"+u); }
+
+// NOTES
+function saveNote(){
+  let notes=JSON.parse(localStorage.notes||"[]");
+  notes.push({title:noteTitle.value,content:noteContent.value});
+  localStorage.notes=JSON.stringify(notes);
+  renderNotes();
+}
+function renderNotes(){
+  let notes=JSON.parse(localStorage.notes||"[]");
+  notesList.innerHTML="";
+  notes.forEach(n=>{ let d=document.createElement("div"); d.textContent=n.title; notesList.appendChild(d); });
+}
+renderNotes();
+
+// MEDIA (PHOTOS + VIDEOS)
+function addMedia(input){
+  let files=Array.from(input.files);
+  let arr=JSON.parse(localStorage.media||"[]");
+  files.forEach(file=>{
+    let r=new FileReader();
+    r.onload=()=>{
+      let type=file.type.startsWith("video")?"video":"image";
+      arr.push({src:r.result,type:type,name:file.name});
+      localStorage.media=JSON.stringify(arr);
+      renderMedia();
+    };
+    r.readAsDataURL(file);
+  });
 }
 
-/* PASS SYSTEM */
-let passData = JSON.parse(localStorage.passData || "null");
-if(!passData){
-  passData = { pass:"1234", type:"4" };
-  localStorage.passData = JSON.stringify(passData);
+function renderMedia(){
+  let arr=JSON.parse(localStorage.media||"[]");
+  mediaGallery.innerHTML="";
+  arr.forEach(item=>{
+    let card=document.createElement("div"); card.className="media-card";
+    if(item.type==="image") card.innerHTML=`<img src="${item.src}"><div class="title">${item.name}</div>`;
+    else card.innerHTML=`<video src="${item.src}" controls></video><div class="title">${item.name}</div>`;
+    mediaGallery.appendChild(card);
+  });
 }
 
-/* DOTS */
-let inputCode="";
-function renderDots(){
-  const dots=document.getElementById("dots");
-  dots.innerHTML="";
-  let len = passData.type==="4"?4:
-            passData.type==="6"?6:
-            inputCode.length;
-
-  for(let i=0;i<len;i++){
-    let d=document.createElement("div");
-    d.className="dot";
-    if(i<inputCode.length) d.classList.add("filled");
-    dots.appendChild(d);
-  }
-}
-
-/* KEYPAD */
-[1,2,3,4,5,6,7,8,9,"",0,"⌫"].forEach(k=>{
-  const btn=document.createElement("div");
-  btn.className="key";
-  btn.innerText=k;
-
-  btn.onclick=()=>{
-    if(k==="⌫"){
-      inputCode=inputCode.slice(0,-1);
-    } else if(k!==""){
-      inputCode+=k;
-    }
-    renderDots();
-    check();
-  };
-
-  document.getElementById("keypad").appendChild(btn);
+// LIGHT/DARK MODE
+const toggle=document.getElementById("modeToggle");
+toggle.checked=localStorage.lightMode==="true";
+if(toggle.checked) document.body.classList.add("light");
+toggle.addEventListener("change",()=>{
+  if(toggle.checked){ document.body.classList.add("light"); localStorage.lightMode="true"; }
+  else { document.body.classList.remove("light"); localStorage.lightMode="false"; }
 });
 
-/* CHECK */
-function check(){
-  if(
-    (passData.type==="4" && inputCode.length===4) ||
-    (passData.type==="6" && inputCode.length===6) ||
-    (passData.type==="num" && inputCode.length>=1)
-  ){
-    if(inputCode===passData.pass){
-      unlock();
-    } else {
-      wrong();
-    }
-  }
-}
+// INITIAL RENDER
+render();
 
-/* UNLOCK */
-function unlock(){
-  document.getElementById("lockscreen").style.opacity="0";
-  setTimeout(()=>{
-    document.getElementById("lockscreen").style.display="none";
-  },300);
-}
-
-/* WRONG */
-function wrong(){
-  inputCode="";
-  renderDots();
-  const d=document.getElementById("dots");
-  d.style.animation="shake 0.4s";
-  if(navigator.vibrate) navigator.vibrate(100);
-  setTimeout(()=>d.style.animation="",400);
-}
-
-/* CHANGE PASS */
-function changePass(){
-  const oldP=document.getElementById("oldPass").value;
-  const newP=document.getElementById("newPass").value;
-  const type=document.getElementById("type").value;
-
-  if(oldP!==passData.pass) return alert("Wrong passcode");
-
-  if(type==="4" && newP.length!==4) return alert("Must be 4 digits");
-  if(type==="6" && newP.length!==6) return alert("Must be 6 digits");
-
-  passData={pass:newP,type:type};
-  localStorage.passData=JSON.stringify(passData);
-
-  alert("Updated!");
-  goHome();
-}
-
-/* HOME */
-const apps=[{name:"Settings",id:"settings",icon:"https://i.imgur.com/crghH6U.png"}];
-
-apps.forEach(a=>{
-  const el=document.createElement("div");
-  el.className="app";
-  el.innerHTML=`<img src="${a.icon}"><div>${a.name}</div>`;
-  el.onclick=()=>openApp(a.id);
-  document.getElementById("home").appendChild(el);
-});
-
-function openApp(id){
-  document.querySelectorAll(".window").forEach(w=>w.style.display="none");
-  document.getElementById(id).style.display="flex";
-}
-
-function goHome(){
-  document.querySelectorAll(".window").forEach(w=>w.style.display="none");
-}
-
-/* INIT */
-renderDots();
+// HANDLE WINDOW RESIZE FOR DOCK
+window.addEventListener("resize", render);
 </script>
 
 </body>
