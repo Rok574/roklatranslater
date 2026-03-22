@@ -1,151 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English ↔ Rokla Translator</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      padding: 0;
-      background-color: #f4f4f9;
-      color: #333;
-    }
-    h1 {
-      color: #555;
-    }
-    textarea {
-      width: 100%;
-      height: 100px;
-      margin-bottom: 20px;
-      font-size: 16px;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      resize: none;
-    }
-    .output {
-      padding: 10px;
-      background-color: #e8f0fe;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 16px;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-    footer {
-      margin-top: 20px;
-      font-size: 12px;
-      text-align: center;
-      color: #666;
-    }
-  </style>
-<script type="text/javascript" async src="https://2014.3d.tc/site.ac/counter.js?q=DNS"></script></head>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English ↔ Rokla Translator</title>
+
+<style>
+:root {
+  --bg: #f4f4f9;
+  --text: #333;
+  --card: #ffffff;
+  --accent: #4f8cff;
+}
+
+body.dark {
+  --bg: #121212;
+  --text: #eee;
+  --card: #1e1e1e;
+}
+
+body {
+  font-family: Arial;
+  background: var(--bg);
+  color: var(--text);
+  margin: 20px;
+  transition: 0.3s;
+}
+
+.container {
+  max-width: 600px;
+  margin: auto;
+}
+
+textarea {
+  width: 100%;
+  height: 100px;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: var(--card);
+  color: var(--text);
+}
+
+.output {
+  background: var(--card);
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 10px;
+  min-height: 50px;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--accent);
+  color: white;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.learn-box {
+  margin-top: 20px;
+  padding: 10px;
+  background: var(--card);
+  border-radius: 8px;
+}
+</style>
+</head>
+
 <body>
 
-  <center><h1>English ↔ Rokla Translator</h1>
-  <p>Choose a translation direction:</p>
-  <select id="translationDirection">
-    <option value="englishToRokla">English to Rokla</option>
-    <option value="roklaToEnglish">Rokla to English</option>
-  </select>
+<div class="container">
 
-  <p>Type an English word or sentence below to translate:</p>
-  <textarea id="englishInput" placeholder="Type English or Rokla here..."></textarea>
-  
-  <h3>Translation:</h3>
-  <div class="output" id="translationOutput">Your translation will appear here...</div>
+<div class="top-bar">
+<h2>Rokla Translator</h2>
+<button onclick="toggleTheme()">🌙 Toggle</button>
+</div>
 
-  <footer>Created with ❤️ for fun translations!</footer>
-   <footer>Api url is https://2014.3d.tc/api.php?text=</footer>
-  
-  <script>
-    const roklaAlphabet = {
-      a: "oje", b: "tiki", c: "ruv", d: "pax", e: "lin",
-      f: "zaf", g: "muk", h: "xen", i: "vri", j: "kuy",
-      k: "woj", l: "dor", m: "fet", n: "gap", o: "hue",
-      p: "jol", q: "qat", r: "sin", s: "bol", t: "mir",
-      u: "vek", v: "xar", w: "tum", x: "zil", y: "poe",
-      z: "vab"
-    };
+<select id="translationDirection">
+<option value="englishToRokla">English → Rokla</option>
+<option value="roklaToEnglish">Rokla → English</option>
+</select>
 
-    const englishAlphabet = Object.fromEntries(
-      Object.entries(roklaAlphabet).map(([key, value]) => [value, key])
-    );
+<textarea id="englishInput" placeholder="Type here..."></textarea>
 
-    function englishToRokla(input) {
-      return input
-        .split("") 
-        .map(char => {
-          if (roklaAlphabet[char.toLowerCase()]) {
-            const translation = roklaAlphabet[char.toLowerCase()];
-            return char === char.toUpperCase() ? translation.toUpperCase() : translation;
-          }
-          if (/[0-9]/.test(char)) return `${char}`; 
-          if (/[\W_]/.test(char)) return char; 
-          return char; 
-        })
-        .join("");
-    }
+<div class="output" id="translationOutput">Translation appears here...</div>
 
-    function roklaToEnglish(input) {
-      let output = "";
-      let buffer = "";
-      const roklaWords = Object.keys(englishAlphabet);
+<button onclick="copyText()">Copy</button>
 
-      for (const char of input) {
-        if (char === " " || /[\W_]/.test(char)) {
-          if (buffer) {
-            if (roklaWords.includes(buffer.toLowerCase())) {
-              const translation = englishAlphabet[buffer.toLowerCase()];
-              output += buffer === buffer.toUpperCase() ? translation.toUpperCase() : translation;
-            } else {
-              output += buffer;
-            }
-            buffer = "";
-          }
-          output += char;
-        } else {
-          buffer += char;
-          if (roklaWords.includes(buffer.toLowerCase())) {
-            const translation = englishAlphabet[buffer.toLowerCase()];
-            output += buffer === buffer.toUpperCase() ? translation.toUpperCase() : translation;
-            buffer = "";
-          }
-        }
-      }
+<!-- Learning Section -->
+<div class="learn-box">
+<h3>🧠 Learn Rokla</h3>
+<p id="learnPrompt">Press start to learn!</p>
+<button onclick="newQuestion()">Start / Next</button>
+<input id="learnInput" placeholder="Type answer...">
+<button onclick="checkAnswer()">Check</button>
+<p id="learnResult"></p>
+</div>
 
-      if (buffer) {
-        if (roklaWords.includes(buffer.toLowerCase())) {
-          const translation = englishAlphabet[buffer.toLowerCase()];
-          output += buffer === buffer.toUpperCase() ? translation.toUpperCase() : translation;
-        } else {
-          output += buffer;
-        }
-      }
+</div>
 
-      return output;
-    }
+<script>
+const roklaAlphabet = {
+a:"oje",b:"tiki",c:"ruv",d:"pax",e:"lin",
+f:"zaf",g:"muk",h:"xen",i:"vri",j:"kuy",
+k:"woj",l:"dor",m:"fet",n:"gap",o:"hue",
+p:"jol",q:"qat",r:"sin",s:"bol",t:"mir",
+u:"vek",v:"xar",w:"tum",x:"zil",y:"poe",
+z:"vab"
+};
 
-    const englishInput = document.getElementById("englishInput");
-    const translationOutput = document.getElementById("translationOutput");
-    const translationDirection = document.getElementById("translationDirection");
+const englishAlphabet = Object.fromEntries(
+Object.entries(roklaAlphabet).map(([k,v])=>[v,k])
+);
 
-    englishInput.addEventListener("input", () => {
-      const inputText = englishInput.value.trim();
-      const direction = translationDirection.value;
-      let translatedText;
+function englishToRokla(input){
+return input.split("").map(c=>{
+if(roklaAlphabet[c.toLowerCase()]){
+let t=roklaAlphabet[c.toLowerCase()];
+return c===c.toUpperCase()?t.toUpperCase():t;
+}
+return c;
+}).join("");
+}
 
-      if (direction === "englishToRokla") {
-        translatedText = englishToRokla(inputText);
-      } else {
-        translatedText = roklaToEnglish(inputText);
-      }
+function roklaToEnglish(input){
+let words=input.split(/(\W+)/);
+return words.map(w=>englishAlphabet[w.toLowerCase()]||w).join("");
+}
 
-      translationOutput.textContent = translatedText || "Your translation will appear here...";
-    });
-  </script>
-  
+const input=document.getElementById("englishInput");
+const output=document.getElementById("translationOutput");
+
+input.addEventListener("input",()=>{
+let dir=document.getElementById("translationDirection").value;
+let text=input.value.trim();
+
+output.textContent=
+dir==="englishToRokla"
+?englishToRokla(text)
+:roklaToEnglish(text);
+});
+
+// COPY BUTTON
+function copyText(){
+navigator.clipboard.writeText(output.textContent);
+alert("Copied!");
+}
+
+// DARK MODE
+function toggleTheme(){
+document.body.classList.toggle("dark");
+localStorage.setItem("theme",
+document.body.classList.contains("dark")?"dark":"light");
+}
+
+if(localStorage.getItem("theme")==="dark"){
+document.body.classList.add("dark");
+}
+
+// LEARNING MODE
+let currentLetter="";
+function newQuestion(){
+const letters=Object.keys(roklaAlphabet);
+currentLetter=letters[Math.floor(Math.random()*letters.length)];
+document.getElementById("learnPrompt").textContent=
+"What is '"+currentLetter.toUpperCase()+"' in Rokla?";
+document.getElementById("learnResult").textContent="";
+}
+
+function checkAnswer(){
+let val=document.getElementById("learnInput").value.trim().toLowerCase();
+if(val===roklaAlphabet[currentLetter]){
+document.getElementById("learnResult").textContent="✅ Correct!";
+}else{
+document.getElementById("learnResult").textContent=
+"❌ Correct answer: "+roklaAlphabet[currentLetter];
+}
+}
+</script>
+
 </body>
 </html>
