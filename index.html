@@ -3,152 +3,201 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>English ↔ Rokla Translator</title>
+<title>Rokla Translator</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
 :root {
-  --bg: #f4f4f9;
-  --text: #333;
-  --card: #ffffff;
-  --accent: #4f8cff;
-}
-
-body.dark {
-  --bg: #121212;
-  --text: #eee;
-  --card: #1e1e1e;
+  --bg-color: #0a0a0a;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --text-main: #ffffff;
+  --text-muted: #a0a0a0;
 }
 
 body {
-  font-family: Arial;
-  background: var(--bg);
-  color: var(--text);
-  margin: 20px;
-  transition: 0.3s;
-}
-
-.container {
-  max-width: 600px;
-  margin: auto;
-}
-
-textarea {
-  width: 100%;
-  height: 100px;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  background: var(--card);
-  color: var(--text);
-}
-
-.output {
-  background: var(--card);
-  padding: 10px;
-  border-radius: 8px;
-  margin-top: 10px;
-  min-height: 50px;
-  white-space: pre-wrap;
-}
-
-button {
-  margin-top: 10px;
-  padding: 10px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  background: var(--accent);
-  color: white;
-}
-
-.top-bar {
+  background-color: var(--bg-color);
+  /* Subtle grain/mesh for glass contrast */
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(255,255,255,0.03) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(255,255,255,0.02) 0px, transparent 50%);
+  color: var(--text-main);
+  /* Using Inter as the primary font */
+  font-family: 'Inter', sans-serif;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
 }
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid var(--glass-border);
+  border-radius: 40px; 
+  padding: 45px;
+  width: 90%;
+  max-width: 480px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+}
+
+h2 {
+  text-align: center;
+  font-weight: 600;
+  font-size: 24px;
+  margin-top: 0;
+  margin-bottom: 30px;
+  letter-spacing: -0.02em;
+}
+
+select, textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  color: white;
+  padding: 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  outline: none;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+textarea:focus {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.output-container {
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 24px;
+  min-height: 60px;
+  margin-top: 10px;
+}
+
+#outputDisplay {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-main);
+  word-wrap: break-word;
+  padding-right: 75px; 
+  white-space: pre-wrap;
+  font-weight: 400;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: #ffffff;
+  color: #000000;
+  border: none;
+  border-radius: 14px;
+  padding: 8px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: transform 0.1s ease, opacity 0.2s;
+}
+
+.copy-btn:hover { opacity: 0.9; }
+.copy-btn:active { transform: scale(0.95); }
+
+::placeholder { color: var(--text-muted); }
+select option { background: #111; color: white; }
 </style>
 </head>
-
 <body>
 
-<div class="container">
+<div class="glass-card">
+  <h2>Rokla Translator</h2>
 
-<div class="top-bar">
-<h2>Rokla Translator</h2>
-<button onclick="toggleTheme()">🌙 Toggle</button>
-</div>
+  <select id="mode">
+    <option value="enToRo">English → Rokla</option>
+    <option value="roToEn">Rokla → English</option>
+  </select>
 
-<select id="translationDirection">
-<option value="englishToRokla">English → Rokla</option>
-<option value="roklaToEnglish">Rokla → English</option>
-</select>
+  <textarea id="userInput" placeholder="Type to translate..."></textarea>
 
-<textarea id="englishInput" placeholder="Type here..."></textarea>
-
-<div class="output" id="translationOutput">Translation appears here...</div>
-
-<button onclick="copyText()">Copy</button>
-
+  <div class="output-container">
+    <div id="outputDisplay">Translation...</div>
+    <button class="copy-btn" onclick="copyResult()">Copy</button>
+  </div>
 </div>
 
 <script>
 const roklaAlphabet = {
-a:"oje",b:"tiki",c:"ruv",d:"pax",e:"lin",
-f:"zaf",g:"muk",h:"xen",i:"vri",j:"kuy",
-k:"woj",l:"dor",m:"fet",n:"gap",o:"hue",
-p:"jol",q:"qat",r:"sin",s:"bol",t:"mir",
-u:"vek",v:"xar",w:"tum",x:"zil",y:"poe",
-z:"vab"
+  a:"oje",b:"tiki",c:"ruv",d:"pax",e:"lin",f:"zaf",g:"muk",h:"xen",i:"vri",j:"kuy",
+  k:"woj",l:"dor",m:"fet",n:"gap",o:"hue",p:"jol",q:"qat",r:"sin",s:"bol",t:"mir",
+  u:"vek",v:"xar",w:"tum",x:"zil",y:"poe",z:"vab"
 };
 
-const englishAlphabet = Object.fromEntries(
-Object.entries(roklaAlphabet).map(([k,v])=>[v,k])
-);
+const engAlphabet = Object.fromEntries(Object.entries(roklaAlphabet).map(([k,v])=>[v,k]));
+const roklaKeys = Object.keys(engAlphabet).sort((a,b) => b.length - a.length);
 
-function englishToRokla(input){
-return input.split("").map(c=>{
-if(roklaAlphabet[c.toLowerCase()]){
-let t=roklaAlphabet[c.toLowerCase()];
-return c===c.toUpperCase()?t.toUpperCase():t;
-}
-return c;
-}).join("");
-}
+function performTranslation() {
+  const input = document.getElementById("userInput").value;
+  const mode = document.getElementById("mode").value;
+  const out = document.getElementById("outputDisplay");
 
-function roklaToEnglish(input){
-let words=input.split(/(\W+)/);
-return words.map(w=>englishAlphabet[w.toLowerCase()]||w).join("");
-}
+  if(!input.trim()) { out.innerText = "Translation..."; return; }
 
-const input=document.getElementById("englishInput");
-const output=document.getElementById("translationOutput");
-
-input.addEventListener("input",()=>{
-let dir=document.getElementById("translationDirection").value;
-let text=input.value.trim();
-
-output.textContent=
-dir==="englishToRokla"
-?englishToRokla(text)
-:roklaToEnglish(text);
-});
-
-// COPY BUTTON
-function copyText(){
-navigator.clipboard.writeText(output.textContent);
-alert("Copied");
+  if(mode === "enToRo") {
+    out.innerText = input.split("").map(char => {
+      const l = char.toLowerCase();
+      if(roklaAlphabet[l]) {
+        const t = roklaAlphabet[l];
+        return char === char.toUpperCase() ? t.toUpperCase() : t;
+      }
+      return char;
+    }).join("");
+  } else {
+    const regex = new RegExp(roklaKeys.join("|"), "gi");
+    out.innerText = input.replace(regex, (m) => {
+      const char = engAlphabet[m.toLowerCase()];
+      return m === m.toUpperCase() ? char.toUpperCase() : char;
+    });
+  }
 }
 
-// DARK MODE
-function toggleTheme(){
-document.body.classList.toggle("dark");
-localStorage.setItem("theme",
-document.body.classList.contains("dark")?"dark":"light");
+function copyResult() {
+  const text = document.getElementById("outputDisplay").innerText;
+  const btn = document.querySelector(".copy-btn");
+  
+  if (text === "Translation..." || text === "") return;
+
+  // Fallback Copy Logic
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  document.body.appendChild(textArea);
+  textArea.select();
+  try {
+    document.execCommand('copy');
+    btn.innerText = "Copied!";
+  } catch (err) {
+    console.error('Copy failed', err);
+  }
+  document.body.removeChild(textArea);
+  
+  setTimeout(() => btn.innerText = "Copy", 1500);
 }
 
-if(localStorage.getItem("theme")==="dark"){
-document.body.classList.add("dark");
-}
+document.getElementById("userInput").addEventListener("input", performTranslation);
+document.getElementById("mode").addEventListener("change", performTranslation);
 </script>
 
 </body>
